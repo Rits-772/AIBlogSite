@@ -1,0 +1,46 @@
+const express = require('express');
+const { body } = require('express-validator');
+const { generatePost } = require('../controllers/aiController');
+const { protect } = require('../middleware/authMiddleware');
+const { aiLimiter } = require('../middleware/rateLimiter');
+
+const router = express.Router();
+
+// POST /api/ai/generate
+router.post(
+  '/generate',
+  aiLimiter,
+  [
+    body('topic')
+      .trim()
+      .notEmpty()
+      .withMessage('Topic is required')
+      .isLength({ max: 200 })
+      .withMessage('Topic cannot exceed 200 characters'),
+    body('tone')
+      .optional()
+      .trim()
+      .isIn([
+        'formal',
+        'casual',
+        'thoughtful',
+        'humorous',
+        'persuasive',
+        'academic',
+        'narrative',
+        'contemplative',
+        'analytical',
+        'conversational',
+        'provocative',
+        'lyrical'
+      ])
+      .withMessage('Invalid tone selected'),
+    body('wordCount')
+      .optional()
+      .isInt({ min: 100, max: 3000 })
+      .withMessage('Word count must be between 100 and 3000'),
+  ],
+  generatePost
+);
+
+module.exports = router;

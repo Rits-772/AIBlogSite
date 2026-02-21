@@ -1,0 +1,1435 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { motion, useInView } from 'motion/react';
+
+const AnimatedItem = ({ children, delay = 0, index, onMouseEnter, onClick }) => {
+  const ref = useRef(null);
+  const inView = useInView(ref, { amount: 0.5, triggerOnce: false });
+  return (
+    <motion.div
+      ref={ref}
+      data-index={index}
+      onMouseEnter={onMouseEnter}
+      onClick={onClick}
+      initial={{ scale: 0.7, opacity: 0 }}
+      animate={inView ? { scale: 1, opacity: 1 } : { scale: 0.7, opacity: 0 }}
+      transition={{ duration: 0.2, delay }}
+      className="mb-4 cursor-pointer"
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+const AnimatedList = ({
+  items = [
+    'Item 1',
+    'Item 2',
+    'Item 3',
+    'Item 4',
+    'Item 5',
+    'Item 6',
+    'Item 7',
+    'Item 8',
+    'Item 9',
+    'Item 10',
+    'Item 11',
+    'Item 12',
+    'Item 13',
+    'Item 14',
+    'Item 15'
+  ],
+  onItemSelect,
+  showGradients = true,
+  enableArrowNavigation = true,
+  className = '',
+  itemClassName = '',
+  displayScrollbar = true,
+  initialSelectedIndex = -1
+}) => {
+  const listRef = useRef(null);
+  const [selectedIndex, setSelectedIndex] = useState(initialSelectedIndex);
+  const [keyboardNav, setKeyboardNav] = useState(false);
+  const [topGradientOpacity, setTopGradientOpacity] = useState(0);
+  const [bottomGradientOpacity, setBottomGradientOpacity] = useState(1);
+
+  const handleItemMouseEnter = useCallback(index => {
+    setSelectedIndex(index);
+  }, []);
+
+  const handleItemClick = useCallback(
+    (item, index) => {
+      setSelectedIndex(index);
+      if (onItemSelect) {
+        onItemSelect(item, index);
+      }
+    },
+    [onItemSelect]
+  );
+
+  const handleScroll = useCallback(e => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    setTopGradientOpacity(Math.min(scrollTop / 50, 1));
+    const bottomDistance = scrollHeight - (scrollTop + clientHeight);
+    setBottomGradientOpacity(scrollHeight <= clientHeight ? 0 : Math.min(bottomDistance / 50, 1));
+  }, []);
+
+  useEffect(() => {
+    if (!enableArrowNavigation) return;
+    const handleKeyDown = e => {
+      if (e.key === 'ArrowDown' || (e.key === 'Tab' && !e.shiftKey)) {
+        e.preventDefault();
+        setKeyboardNav(true);
+        setSelectedIndex(prev => Math.min(prev + 1, items.length - 1));
+      } else if (e.key === 'ArrowUp' || (e.key === 'Tab' && e.shiftKey)) {
+        e.preventDefault();
+        setKeyboardNav(true);
+        setSelectedIndex(prev => Math.max(prev - 1, 0));
+      } else if (e.key === 'Enter') {
+        if (selectedIndex >= 0 && selectedIndex < items.length) {
+          e.preventDefault();
+          if (onItemSelect) {
+            onItemSelect(items[selectedIndex], selectedIndex);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [items, selectedIndex, onItemSelect, enableArrowNavigation]);
+
+  useEffect(() => {
+    if (!keyboardNav || selectedIndex < 0 || !listRef.current) return;
+    const container = listRef.current;
+    const selectedItem = container.querySelector(`[data-index="${selectedIndex}"]`);
+    if (selectedItem) {
+      const extraMargin = 50;
+      const containerScrollTop = container.scrollTop;
+      const containerHeight = container.clientHeight;
+      const itemTop = selectedItem.offsetTop;
+      const itemBottom = itemTop + selectedItem.offsetHeight;
+      if (itemTop < containerScrollTop + extraMargin) {
+        container.scrollTo({ top: itemTop - extraMargin, behavior: 'smooth' });
+      } else if (itemBottom > containerScrollTop + containerHeight - extraMargin) {
+        container.scrollTo({
+          top: itemBottom - containerHeight + extraMargin,
+          behavior: 'smooth'
+        });
+      }
+    }
+    setKeyboardNav(false);
+  }, [selectedIndex, keyboardNav]);
+
+  return (
+    <div className={`relative w-[500px] ${className}`}>
+      <div
+        ref={listRef}
+        className={`max-h-[400px] overflow-y-auto p-4 ${
+          displayScrollbar
+            ? '[&::-webkit-scrollbar]:w-[8px] [&::-webkit-scrollbar-track]:bg-[#060010] [&::-webkit-scrollbar-thumb]:bg-[#222] [&::-webkit-scrollbar-thumb]:rounded-[4px]'
+            : 'scrollbar-hide'
+        }`}
+        onScroll={handleScroll}
+        style={{
+          scrollbarWidth: displayScrollbar ? 'thin' : 'none',
+          scrollbarColor: '#222 #060010'
+        }}
+      >
+        {items.map((item, index) => (
+          <AnimatedItem
+            key={index}
+            delay={0.1}
+            index={index}
+            onMouseEnter={() => handleItemMouseEnter(index)}
+            onClick={() => handleItemClick(item, index)}
+          >
+            <div className={`p-4 bg-[#111] rounded-lg ${selectedIndex === index ? 'bg-[#222]' : ''} ${itemClassName}`}>
+              <p className="text-white m-0">{item}</p>
+            </div>
+          </AnimatedItem>
+        ))}
+      </div>
+      {showGradients && (
+        <>
+          <div
+            className="absolute top-0 left-0 right-0 h-[50px] bg-gradient-to-b from-[#060010] to-transparent pointer-events-none transition-opacity duration-300 ease"
+            style={{ opacity: topGradientOpacity }}
+          ></div>
+          <div
+            className="absolute bottom-0 left-0 right-0 h-[100px] bg-gradient-to-t from-[#060010] to-transparent pointer-events-none transition-opacity duration-300 ease"
+            style={{ opacity: bottomGradientOpacity }}
+          ></div>
+        </>
+      )}
+    </div>
+  );
+};
+
+export default AnimatedList;import { useLayoutEffect, useRef, useState } from 'react';
+import { gsap } from 'gsap';
+// use your own icon import if react-icons is not available
+import { GoArrowUpRight } from 'react-icons/go';
+
+const CardNav = ({
+  logo,
+  logoAlt = 'Logo',
+  items,
+  className = '',
+  ease = 'power3.out',
+  baseColor = '#fff',
+  menuColor,
+  buttonBgColor,
+  buttonTextColor
+}) => {
+  const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const navRef = useRef(null);
+  const cardsRef = useRef([]);
+  const tlRef = useRef(null);
+
+  const calculateHeight = () => {
+    const navEl = navRef.current;
+    if (!navEl) return 260;
+
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    if (isMobile) {
+      const contentEl = navEl.querySelector('.card-nav-content');
+      if (contentEl) {
+        const wasVisible = contentEl.style.visibility;
+        const wasPointerEvents = contentEl.style.pointerEvents;
+        const wasPosition = contentEl.style.position;
+        const wasHeight = contentEl.style.height;
+
+        contentEl.style.visibility = 'visible';
+        contentEl.style.pointerEvents = 'auto';
+        contentEl.style.position = 'static';
+        contentEl.style.height = 'auto';
+
+        contentEl.offsetHeight;
+
+        const topBar = 60;
+        const padding = 16;
+        const contentHeight = contentEl.scrollHeight;
+
+        contentEl.style.visibility = wasVisible;
+        contentEl.style.pointerEvents = wasPointerEvents;
+        contentEl.style.position = wasPosition;
+        contentEl.style.height = wasHeight;
+
+        return topBar + contentHeight + padding;
+      }
+    }
+    return 260;
+  };
+
+  const createTimeline = () => {
+    const navEl = navRef.current;
+    if (!navEl) return null;
+
+    gsap.set(navEl, { height: 60, overflow: 'hidden' });
+    gsap.set(cardsRef.current, { y: 50, opacity: 0 });
+
+    const tl = gsap.timeline({ paused: true });
+
+    tl.to(navEl, {
+      height: calculateHeight,
+      duration: 0.4,
+      ease
+    });
+
+    tl.to(cardsRef.current, { y: 0, opacity: 1, duration: 0.4, ease, stagger: 0.08 }, '-=0.1');
+
+    return tl;
+  };
+
+  useLayoutEffect(() => {
+    const tl = createTimeline();
+    tlRef.current = tl;
+
+    return () => {
+      tl?.kill();
+      tlRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ease, items]);
+
+  useLayoutEffect(() => {
+    const handleResize = () => {
+      if (!tlRef.current) return;
+
+      if (isExpanded) {
+        const newHeight = calculateHeight();
+        gsap.set(navRef.current, { height: newHeight });
+
+        tlRef.current.kill();
+        const newTl = createTimeline();
+        if (newTl) {
+          newTl.progress(1);
+          tlRef.current = newTl;
+        }
+      } else {
+        tlRef.current.kill();
+        const newTl = createTimeline();
+        if (newTl) {
+          tlRef.current = newTl;
+        }
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isExpanded]);
+
+  const toggleMenu = () => {
+    const tl = tlRef.current;
+    if (!tl) return;
+    if (!isExpanded) {
+      setIsHamburgerOpen(true);
+      setIsExpanded(true);
+      tl.play(0);
+    } else {
+      setIsHamburgerOpen(false);
+      tl.eventCallback('onReverseComplete', () => setIsExpanded(false));
+      tl.reverse();
+    }
+  };
+
+  const setCardRef = i => el => {
+    if (el) cardsRef.current[i] = el;
+  };
+
+  return (
+    <div
+      className={`card-nav-container absolute left-1/2 -translate-x-1/2 w-[90%] max-w-[800px] z-[99] top-[1.2em] md:top-[2em] ${className}`}
+    >
+      <nav
+        ref={navRef}
+        className={`card-nav ${isExpanded ? 'open' : ''} block h-[60px] p-0 rounded-xl shadow-md relative overflow-hidden will-change-[height]`}
+        style={{ backgroundColor: baseColor }}
+      >
+        <div className="card-nav-top absolute inset-x-0 top-0 h-[60px] flex items-center justify-between p-2 pl-[1.1rem] z-[2]">
+          <div
+            className={`hamburger-menu ${isHamburgerOpen ? 'open' : ''} group h-full flex flex-col items-center justify-center cursor-pointer gap-[6px] order-2 md:order-none`}
+            onClick={toggleMenu}
+            role="button"
+            aria-label={isExpanded ? 'Close menu' : 'Open menu'}
+            tabIndex={0}
+            style={{ color: menuColor || '#000' }}
+          >
+            <div
+              className={`hamburger-line w-[30px] h-[2px] bg-current transition-[transform,opacity,margin] duration-300 ease-linear [transform-origin:50%_50%] ${
+                isHamburgerOpen ? 'translate-y-[4px] rotate-45' : ''
+              } group-hover:opacity-75`}
+            />
+            <div
+              className={`hamburger-line w-[30px] h-[2px] bg-current transition-[transform,opacity,margin] duration-300 ease-linear [transform-origin:50%_50%] ${
+                isHamburgerOpen ? '-translate-y-[4px] -rotate-45' : ''
+              } group-hover:opacity-75`}
+            />
+          </div>
+
+          <div className="logo-container flex items-center md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 order-1 md:order-none">
+            <img src={logo} alt={logoAlt} className="logo h-[28px]" />
+          </div>
+
+          <button
+            type="button"
+            className="card-nav-cta-button hidden md:inline-flex border-0 rounded-[calc(0.75rem-0.2rem)] px-4 items-center h-full font-medium cursor-pointer transition-colors duration-300"
+            style={{ backgroundColor: buttonBgColor, color: buttonTextColor }}
+          >
+            Get Started
+          </button>
+        </div>
+
+        <div
+          className={`card-nav-content absolute left-0 right-0 top-[60px] bottom-0 p-2 flex flex-col items-stretch gap-2 justify-start z-[1] ${
+            isExpanded ? 'visible pointer-events-auto' : 'invisible pointer-events-none'
+          } md:flex-row md:items-end md:gap-[12px]`}
+          aria-hidden={!isExpanded}
+        >
+          {(items || []).slice(0, 3).map((item, idx) => (
+            <div
+              key={`${item.label}-${idx}`}
+              className="nav-card select-none relative flex flex-col gap-2 p-[12px_16px] rounded-[calc(0.75rem-0.2rem)] min-w-0 flex-[1_1_auto] h-auto min-h-[60px] md:h-full md:min-h-0 md:flex-[1_1_0%]"
+              ref={setCardRef(idx)}
+              style={{ backgroundColor: item.bgColor, color: item.textColor }}
+            >
+              <div className="nav-card-label font-normal tracking-[-0.5px] text-[18px] md:text-[22px]">
+                {item.label}
+              </div>
+              <div className="nav-card-links mt-auto flex flex-col gap-[2px]">
+                {item.links?.map((lnk, i) => (
+                  <a
+                    key={`${lnk.label}-${i}`}
+                    className="nav-card-link inline-flex items-center gap-[6px] no-underline cursor-pointer transition-opacity duration-300 hover:opacity-75 text-[15px] md:text-[16px]"
+                    href={lnk.href}
+                    aria-label={lnk.ariaLabel}
+                  >
+                    <GoArrowUpRight className="nav-card-link-icon shrink-0" aria-hidden="true" />
+                    {lnk.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </nav>
+    </div>
+  );
+};
+
+export default CardNav;
+
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { gsap } from 'gsap';
+
+const useMedia = (queries, values, defaultValue) => {
+  const get = () => values[queries.findIndex(q => matchMedia(q).matches)] ?? defaultValue;
+
+  const [value, setValue] = useState(get);
+
+  useEffect(() => {
+    const handler = () => setValue(get);
+    queries.forEach(q => matchMedia(q).addEventListener('change', handler));
+    return () => queries.forEach(q => matchMedia(q).removeEventListener('change', handler));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queries]);
+
+  return value;
+};
+
+const useMeasure = () => {
+  const ref = useRef(null);
+  const [size, setSize] = useState({ width: 0, height: 0 });
+
+  useLayoutEffect(() => {
+    if (!ref.current) return;
+    const ro = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      setSize({ width, height });
+    });
+    ro.observe(ref.current);
+    return () => ro.disconnect();
+  }, []);
+
+  return [ref, size];
+};
+
+const preloadImages = async urls => {
+  await Promise.all(
+    urls.map(
+      src =>
+        new Promise(resolve => {
+          const img = new Image();
+          img.src = src;
+          img.onload = img.onerror = () => resolve();
+        })
+    )
+  );
+};
+
+const Masonry = ({
+  items,
+  ease = 'power3.out',
+  duration = 0.6,
+  stagger = 0.05,
+  animateFrom = 'bottom',
+  scaleOnHover = true,
+  hoverScale = 0.95,
+  blurToFocus = true,
+  colorShiftOnHover = false
+}) => {
+  const columns = useMedia(
+    ['(min-width:1500px)', '(min-width:1000px)', '(min-width:600px)', '(min-width:400px)'],
+    [5, 4, 3, 2],
+    1
+  );
+
+  const [containerRef, { width }] = useMeasure();
+  const [imagesReady, setImagesReady] = useState(false);
+
+  const getInitialPosition = item => {
+    const containerRect = containerRef.current?.getBoundingClientRect();
+    if (!containerRect) return { x: item.x, y: item.y };
+
+    let direction = animateFrom;
+    if (animateFrom === 'random') {
+      const dirs = ['top', 'bottom', 'left', 'right'];
+      direction = dirs[Math.floor(Math.random() * dirs.length)];
+    }
+
+    switch (direction) {
+      case 'top':
+        return { x: item.x, y: -200 };
+      case 'bottom':
+        return { x: item.x, y: window.innerHeight + 200 };
+      case 'left':
+        return { x: -200, y: item.y };
+      case 'right':
+        return { x: window.innerWidth + 200, y: item.y };
+      case 'center':
+        return {
+          x: containerRect.width / 2 - item.w / 2,
+          y: containerRect.height / 2 - item.h / 2
+        };
+      default:
+        return { x: item.x, y: item.y + 100 };
+    }
+  };
+
+  useEffect(() => {
+    preloadImages(items.map(i => i.img)).then(() => setImagesReady(true));
+  }, [items]);
+
+  const grid = useMemo(() => {
+    if (!width) return [];
+    const colHeights = new Array(columns).fill(0);
+    const gap = 16;
+    const totalGaps = (columns - 1) * gap;
+    const columnWidth = (width - totalGaps) / columns;
+
+    return items.map(child => {
+      const col = colHeights.indexOf(Math.min(...colHeights));
+      const x = col * (columnWidth + gap);
+      const height = child.height / 2;
+      const y = colHeights[col];
+
+      colHeights[col] += height + gap;
+      return { ...child, x, y, w: columnWidth, h: height };
+    });
+  }, [columns, items, width]);
+
+  const hasMounted = useRef(false);
+
+  useLayoutEffect(() => {
+    if (!imagesReady) return;
+
+    grid.forEach((item, index) => {
+      const selector = `[data-key="${item.id}"]`;
+      const animProps = { x: item.x, y: item.y, width: item.w, height: item.h };
+
+      if (!hasMounted.current) {
+        const start = getInitialPosition(item);
+        gsap.fromTo(
+          selector,
+          {
+            opacity: 0,
+            x: start.x,
+            y: start.y,
+            width: item.w,
+            height: item.h,
+            ...(blurToFocus && { filter: 'blur(10px)' })
+          },
+          {
+            opacity: 1,
+            ...animProps,
+            ...(blurToFocus && { filter: 'blur(0px)' }),
+            duration: 0.8,
+            ease: 'power3.out',
+            delay: index * stagger
+          }
+        );
+      } else {
+        gsap.to(selector, {
+          ...animProps,
+          duration,
+          ease,
+          overwrite: 'auto'
+        });
+      }
+    });
+
+    hasMounted.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [grid, imagesReady, stagger, animateFrom, blurToFocus, duration, ease]);
+
+  const handleMouseEnter = (id, element) => {
+    if (scaleOnHover) {
+      gsap.to(`[data-key="${id}"]`, {
+        scale: hoverScale,
+        duration: 0.3,
+        ease: 'power2.out'
+      });
+    }
+    if (colorShiftOnHover) {
+      const overlay = element.querySelector('.color-overlay');
+      if (overlay) gsap.to(overlay, { opacity: 0.3, duration: 0.3 });
+    }
+  };
+
+  const handleMouseLeave = (id, element) => {
+    if (scaleOnHover) {
+      gsap.to(`[data-key="${id}"]`, {
+        scale: 1,
+        duration: 0.3,
+        ease: 'power2.out'
+      });
+    }
+    if (colorShiftOnHover) {
+      const overlay = element.querySelector('.color-overlay');
+      if (overlay) gsap.to(overlay, { opacity: 0, duration: 0.3 });
+    }
+  };
+
+  return (
+    <div ref={containerRef} className="relative w-full h-full">
+      {grid.map(item => (
+        <div
+          key={item.id}
+          data-key={item.id}
+          className="absolute box-content"
+          style={{ willChange: 'transform, width, height, opacity' }}
+          onClick={() => window.open(item.url, '_blank', 'noopener')}
+          onMouseEnter={e => handleMouseEnter(item.id, e.currentTarget)}
+          onMouseLeave={e => handleMouseLeave(item.id, e.currentTarget)}
+        >
+          <div
+            className="relative w-full h-full bg-cover bg-center rounded-[10px] shadow-[0px_10px_50px_-10px_rgba(0,0,0,0.2)] uppercase text-[10px] leading-[10px]"
+            style={{ backgroundImage: `url(${item.img})` }}
+          >
+            {colorShiftOnHover && (
+              <div className="color-overlay absolute inset-0 rounded-[10px] bg-gradient-to-tr from-pink-500/50 to-sky-500/50 opacity-0 pointer-events-none" />
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default Masonry;
+import React, { Children, cloneElement, forwardRef, isValidElement, useEffect, useMemo, useRef } from 'react';
+import gsap from 'gsap';
+
+export const Card = forwardRef(({ customClass, ...rest }, ref) => (
+  <div
+    ref={ref}
+    {...rest}
+    className={`absolute top-1/2 left-1/2 rounded-xl border border-white bg-black [transform-style:preserve-3d] [will-change:transform] [backface-visibility:hidden] ${customClass ?? ''} ${rest.className ?? ''}`.trim()}
+  />
+));
+Card.displayName = 'Card';
+
+const makeSlot = (i, distX, distY, total) => ({
+  x: i * distX,
+  y: -i * distY,
+  z: -i * distX * 1.5,
+  zIndex: total - i
+});
+
+const placeNow = (el, slot, skew) =>
+  gsap.set(el, {
+    x: slot.x,
+    y: slot.y,
+    z: slot.z,
+    xPercent: -50,
+    yPercent: -50,
+    skewY: skew,
+    transformOrigin: 'center center',
+    zIndex: slot.zIndex,
+    force3D: true
+  });
+
+const CardSwap = ({
+  width = 500,
+  height = 400,
+  cardDistance = 60,
+  verticalDistance = 70,
+  delay = 5000,
+  pauseOnHover = false,
+  onCardClick,
+  skewAmount = 6,
+  easing = 'elastic',
+  children
+}) => {
+  const config =
+    easing === 'elastic'
+      ? {
+          ease: 'elastic.out(0.6,0.9)',
+          durDrop: 2,
+          durMove: 2,
+          durReturn: 2,
+          promoteOverlap: 0.9,
+          returnDelay: 0.05
+        }
+      : {
+          ease: 'power1.inOut',
+          durDrop: 0.8,
+          durMove: 0.8,
+          durReturn: 0.8,
+          promoteOverlap: 0.45,
+          returnDelay: 0.2
+        };
+
+  const childArr = useMemo(() => Children.toArray(children), [children]);
+  const refs = useMemo(
+    () => childArr.map(() => React.createRef()),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [childArr.length]
+  );
+
+  const order = useRef(Array.from({ length: childArr.length }, (_, i) => i));
+
+  const tlRef = useRef(null);
+  const intervalRef = useRef();
+  const container = useRef(null);
+
+  useEffect(() => {
+    const total = refs.length;
+    refs.forEach((r, i) => placeNow(r.current, makeSlot(i, cardDistance, verticalDistance, total), skewAmount));
+
+    const swap = () => {
+      if (order.current.length < 2) return;
+
+      const [front, ...rest] = order.current;
+      const elFront = refs[front].current;
+      const tl = gsap.timeline();
+      tlRef.current = tl;
+
+      tl.to(elFront, {
+        y: '+=500',
+        duration: config.durDrop,
+        ease: config.ease
+      });
+
+      tl.addLabel('promote', `-=${config.durDrop * config.promoteOverlap}`);
+      rest.forEach((idx, i) => {
+        const el = refs[idx].current;
+        const slot = makeSlot(i, cardDistance, verticalDistance, refs.length);
+        tl.set(el, { zIndex: slot.zIndex }, 'promote');
+        tl.to(
+          el,
+          {
+            x: slot.x,
+            y: slot.y,
+            z: slot.z,
+            duration: config.durMove,
+            ease: config.ease
+          },
+          `promote+=${i * 0.15}`
+        );
+      });
+
+      const backSlot = makeSlot(refs.length - 1, cardDistance, verticalDistance, refs.length);
+      tl.addLabel('return', `promote+=${config.durMove * config.returnDelay}`);
+      tl.call(
+        () => {
+          gsap.set(elFront, { zIndex: backSlot.zIndex });
+        },
+        undefined,
+        'return'
+      );
+      tl.to(
+        elFront,
+        {
+          x: backSlot.x,
+          y: backSlot.y,
+          z: backSlot.z,
+          duration: config.durReturn,
+          ease: config.ease
+        },
+        'return'
+      );
+
+      tl.call(() => {
+        order.current = [...rest, front];
+      });
+    };
+
+    swap();
+    intervalRef.current = window.setInterval(swap, delay);
+
+    if (pauseOnHover) {
+      const node = container.current;
+      const pause = () => {
+        tlRef.current?.pause();
+        clearInterval(intervalRef.current);
+      };
+      const resume = () => {
+        tlRef.current?.play();
+        intervalRef.current = window.setInterval(swap, delay);
+      };
+      node.addEventListener('mouseenter', pause);
+      node.addEventListener('mouseleave', resume);
+      return () => {
+        node.removeEventListener('mouseenter', pause);
+        node.removeEventListener('mouseleave', resume);
+        clearInterval(intervalRef.current);
+      };
+    }
+    return () => clearInterval(intervalRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cardDistance, verticalDistance, delay, pauseOnHover, skewAmount, easing]);
+
+  const rendered = childArr.map((child, i) =>
+    isValidElement(child)
+      ? cloneElement(child, {
+          key: i,
+          ref: refs[i],
+          style: { width, height, ...(child.props.style ?? {}) },
+          onClick: e => {
+            child.props.onClick?.(e);
+            onCardClick?.(i);
+          }
+        })
+      : child
+  );
+
+  return (
+    <div
+      ref={container}
+      className="absolute bottom-0 right-0 transform translate-x-[5%] translate-y-[20%] origin-bottom-right perspective-[900px] overflow-visible max-[768px]:translate-x-[25%] max-[768px]:translate-y-[25%] max-[768px]:scale-[0.75] max-[480px]:translate-x-[25%] max-[480px]:translate-y-[25%] max-[480px]:scale-[0.55]"
+      style={{ width, height }}
+    >
+      {rendered}
+    </div>
+  );
+};
+
+export default CardSwap;
+
+import { animate, motion, useMotionValue, useMotionValueEvent, useTransform } from 'motion/react';
+import { useEffect, useRef, useState } from 'react';
+
+const MAX_OVERFLOW = 50;
+
+export default function ElasticSlider({
+  defaultValue = 50,
+  startingValue = 0,
+  maxValue = 100,
+  className = '',
+  isStepped = false,
+  stepSize = 1,
+  leftIcon = <>-</>,
+  rightIcon = <>+</>
+}) {
+  return (
+    <div className={`flex flex-col items-center justify-center gap-4 w-48 ${className}`}>
+      <Slider
+        defaultValue={defaultValue}
+        startingValue={startingValue}
+        maxValue={maxValue}
+        isStepped={isStepped}
+        stepSize={stepSize}
+        leftIcon={leftIcon}
+        rightIcon={rightIcon}
+      />
+    </div>
+  );
+}
+
+function Slider({ defaultValue, startingValue, maxValue, isStepped, stepSize, leftIcon, rightIcon }) {
+  const [value, setValue] = useState(defaultValue);
+  const sliderRef = useRef(null);
+  const [region, setRegion] = useState('middle');
+  const clientX = useMotionValue(0);
+  const overflow = useMotionValue(0);
+  const scale = useMotionValue(1);
+
+  useEffect(() => {
+    setValue(defaultValue);
+  }, [defaultValue]);
+
+  useMotionValueEvent(clientX, 'change', latest => {
+    if (sliderRef.current) {
+      const { left, right } = sliderRef.current.getBoundingClientRect();
+      let newValue;
+
+      if (latest < left) {
+        setRegion('left');
+        newValue = left - latest;
+      } else if (latest > right) {
+        setRegion('right');
+        newValue = latest - right;
+      } else {
+        setRegion('middle');
+        newValue = 0;
+      }
+
+      overflow.jump(decay(newValue, MAX_OVERFLOW));
+    }
+  });
+
+  const handlePointerMove = e => {
+    if (e.buttons > 0 && sliderRef.current) {
+      const { left, width } = sliderRef.current.getBoundingClientRect();
+      let newValue = startingValue + ((e.clientX - left) / width) * (maxValue - startingValue);
+
+      if (isStepped) {
+        newValue = Math.round(newValue / stepSize) * stepSize;
+      }
+
+      newValue = Math.min(Math.max(newValue, startingValue), maxValue);
+      setValue(newValue);
+      clientX.jump(e.clientX);
+    }
+  };
+
+  const handlePointerDown = e => {
+    handlePointerMove(e);
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerUp = () => {
+    animate(overflow, 0, { type: 'spring', bounce: 0.5 });
+  };
+
+  const getRangePercentage = () => {
+    const totalRange = maxValue - startingValue;
+    if (totalRange === 0) return 0;
+    return ((value - startingValue) / totalRange) * 100;
+  };
+
+  return (
+    <>
+      <motion.div
+        onHoverStart={() => animate(scale, 1.2)}
+        onHoverEnd={() => animate(scale, 1)}
+        onTouchStart={() => animate(scale, 1.2)}
+        onTouchEnd={() => animate(scale, 1)}
+        style={{
+          scale,
+          opacity: useTransform(scale, [1, 1.2], [0.7, 1])
+        }}
+        className="flex w-full touch-none select-none items-center justify-center gap-4"
+      >
+        <motion.div
+          animate={{
+            scale: region === 'left' ? [1, 1.4, 1] : 1,
+            transition: { duration: 0.25 }
+          }}
+          style={{
+            x: useTransform(() => (region === 'left' ? -overflow.get() / scale.get() : 0))
+          }}
+        >
+          {leftIcon}
+        </motion.div>
+
+        <div
+          ref={sliderRef}
+          className="relative flex w-full max-w-xs flex-grow cursor-grab touch-none select-none items-center py-4"
+          onPointerMove={handlePointerMove}
+          onPointerDown={handlePointerDown}
+          onPointerUp={handlePointerUp}
+        >
+          <motion.div
+            style={{
+              scaleX: useTransform(() => {
+                if (sliderRef.current) {
+                  const { width } = sliderRef.current.getBoundingClientRect();
+                  return 1 + overflow.get() / width;
+                }
+              }),
+              scaleY: useTransform(overflow, [0, MAX_OVERFLOW], [1, 0.8]),
+              transformOrigin: useTransform(() => {
+                if (sliderRef.current) {
+                  const { left, width } = sliderRef.current.getBoundingClientRect();
+                  return clientX.get() < left + width / 2 ? 'right' : 'left';
+                }
+              }),
+              height: useTransform(scale, [1, 1.2], [6, 12]),
+              marginTop: useTransform(scale, [1, 1.2], [0, -3]),
+              marginBottom: useTransform(scale, [1, 1.2], [0, -3])
+            }}
+            className="flex flex-grow"
+          >
+            <div className="relative h-full flex-grow overflow-hidden rounded-full bg-gray-400">
+              <div className="absolute h-full bg-gray-500 rounded-full" style={{ width: `${getRangePercentage()}%` }} />
+            </div>
+          </motion.div>
+        </div>
+
+        <motion.div
+          animate={{
+            scale: region === 'right' ? [1, 1.4, 1] : 1,
+            transition: { duration: 0.25 }
+          }}
+          style={{
+            x: useTransform(() => (region === 'right' ? overflow.get() / scale.get() : 0))
+          }}
+        >
+          {rightIcon}
+        </motion.div>
+      </motion.div>
+      <p className="absolute text-gray-400 transform -translate-y-4 text-xs font-medium tracking-wide">
+        {Math.round(value)}
+      </p>
+    </>
+  );
+}
+
+function decay(value, max) {
+  if (max === 0) {
+    return 0;
+  }
+
+  const entry = value / max;
+  const sigmoid = 2 * (1 / (1 + Math.exp(-entry)) - 0.5);
+
+  return sigmoid * max;
+}
+import React, { useState, Children, useRef, useLayoutEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+
+export default function Stepper({
+  children,
+  initialStep = 1,
+  onStepChange = () => {},
+  onFinalStepCompleted = () => {},
+  stepCircleContainerClassName = '',
+  stepContainerClassName = '',
+  contentClassName = '',
+  footerClassName = '',
+  backButtonProps = {},
+  nextButtonProps = {},
+  backButtonText = 'Back',
+  nextButtonText = 'Continue',
+  disableStepIndicators = false,
+  renderStepIndicator,
+  ...rest
+}) {
+  const [currentStep, setCurrentStep] = useState(initialStep);
+  const [direction, setDirection] = useState(0);
+  const stepsArray = Children.toArray(children);
+  const totalSteps = stepsArray.length;
+  const isCompleted = currentStep > totalSteps;
+  const isLastStep = currentStep === totalSteps;
+
+  const updateStep = newStep => {
+    setCurrentStep(newStep);
+    if (newStep > totalSteps) onFinalStepCompleted();
+    else onStepChange(newStep);
+  };
+
+  const handleBack = () => {
+    if (currentStep > 1) {
+      setDirection(-1);
+      updateStep(currentStep - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (!isLastStep) {
+      setDirection(1);
+      updateStep(currentStep + 1);
+    }
+  };
+
+  const handleComplete = () => {
+    setDirection(1);
+    updateStep(totalSteps + 1);
+  };
+
+  return (
+    <div
+      className="flex min-h-full flex-1 flex-col items-center justify-center p-4 sm:aspect-[4/3] md:aspect-[2/1]"
+      {...rest}
+    >
+      <div
+        className={`mx-auto w-full max-w-md rounded-4xl shadow-xl ${stepCircleContainerClassName}`}
+        style={{ border: '1px solid #222' }}
+      >
+        <div className={`${stepContainerClassName} flex w-full items-center p-8`}>
+          {stepsArray.map((_, index) => {
+            const stepNumber = index + 1;
+            const isNotLastStep = index < totalSteps - 1;
+            return (
+              <React.Fragment key={stepNumber}>
+                {renderStepIndicator ? (
+                  renderStepIndicator({
+                    step: stepNumber,
+                    currentStep,
+                    onStepClick: clicked => {
+                      setDirection(clicked > currentStep ? 1 : -1);
+                      updateStep(clicked);
+                    }
+                  })
+                ) : (
+                  <StepIndicator
+                    step={stepNumber}
+                    disableStepIndicators={disableStepIndicators}
+                    currentStep={currentStep}
+                    onClickStep={clicked => {
+                      setDirection(clicked > currentStep ? 1 : -1);
+                      updateStep(clicked);
+                    }}
+                  />
+                )}
+                {isNotLastStep && <StepConnector isComplete={currentStep > stepNumber} />}
+              </React.Fragment>
+            );
+          })}
+        </div>
+        <StepContentWrapper
+          isCompleted={isCompleted}
+          currentStep={currentStep}
+          direction={direction}
+          className={`space-y-2 px-8 ${contentClassName}`}
+        >
+          {stepsArray[currentStep - 1]}
+        </StepContentWrapper>
+        {!isCompleted && (
+          <div className={`px-8 pb-8 ${footerClassName}`}>
+            <div className={`mt-10 flex ${currentStep !== 1 ? 'justify-between' : 'justify-end'}`}>
+              {currentStep !== 1 && (
+                <button
+                  onClick={handleBack}
+                  className={`duration-350 rounded px-2 py-1 transition ${
+                    currentStep === 1
+                      ? 'pointer-events-none opacity-50 text-neutral-400'
+                      : 'text-neutral-400 hover:text-neutral-700'
+                  }`}
+                  {...backButtonProps}
+                >
+                  {backButtonText}
+                </button>
+              )}
+              <button
+                onClick={isLastStep ? handleComplete : handleNext}
+                className="duration-350 flex items-center justify-center rounded-full bg-green-500 py-1.5 px-3.5 font-medium tracking-tight text-white transition hover:bg-green-600 active:bg-green-700"
+                {...nextButtonProps}
+              >
+                {isLastStep ? 'Complete' : nextButtonText}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function StepContentWrapper({ isCompleted, currentStep, direction, children, className }) {
+  const [parentHeight, setParentHeight] = useState(0);
+
+  return (
+    <motion.div
+      style={{ position: 'relative', overflow: 'hidden' }}
+      animate={{ height: isCompleted ? 0 : parentHeight }}
+      transition={{ type: 'spring', duration: 0.4 }}
+      className={className}
+    >
+      <AnimatePresence initial={false} mode="sync" custom={direction}>
+        {!isCompleted && (
+          <SlideTransition key={currentStep} direction={direction} onHeightReady={h => setParentHeight(h)}>
+            {children}
+          </SlideTransition>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+function SlideTransition({ children, direction, onHeightReady }) {
+  const containerRef = useRef(null);
+
+  useLayoutEffect(() => {
+    if (containerRef.current) onHeightReady(containerRef.current.offsetHeight);
+  }, [children, onHeightReady]);
+
+  return (
+    <motion.div
+      ref={containerRef}
+      custom={direction}
+      variants={stepVariants}
+      initial="enter"
+      animate="center"
+      exit="exit"
+      transition={{ duration: 0.4 }}
+      style={{ position: 'absolute', left: 0, right: 0, top: 0 }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+const stepVariants = {
+  enter: dir => ({
+    x: dir >= 0 ? '-100%' : '100%',
+    opacity: 0
+  }),
+  center: {
+    x: '0%',
+    opacity: 1
+  },
+  exit: dir => ({
+    x: dir >= 0 ? '50%' : '-50%',
+    opacity: 0
+  })
+};
+
+export function Step({ children }) {
+  return <div className="px-8">{children}</div>;
+}
+
+function StepIndicator({ step, currentStep, onClickStep, disableStepIndicators }) {
+  const status = currentStep === step ? 'active' : currentStep < step ? 'inactive' : 'complete';
+
+  const handleClick = () => {
+    if (step !== currentStep && !disableStepIndicators) onClickStep(step);
+  };
+
+  return (
+    <motion.div
+      onClick={handleClick}
+      className="relative cursor-pointer outline-none focus:outline-none"
+      animate={status}
+      initial={false}
+    >
+      <motion.div
+        variants={{
+          inactive: { scale: 1, backgroundColor: '#222', color: '#a3a3a3' },
+          active: { scale: 1, backgroundColor: '#5227FF', color: '#5227FF' },
+          complete: { scale: 1, backgroundColor: '#5227FF', color: '#3b82f6' }
+        }}
+        transition={{ duration: 0.3 }}
+        className="flex h-8 w-8 items-center justify-center rounded-full font-semibold"
+      >
+        {status === 'complete' ? (
+          <CheckIcon className="h-4 w-4 text-black" />
+        ) : status === 'active' ? (
+          <div className="h-3 w-3 rounded-full bg-[#060010]" />
+        ) : (
+          <span className="text-sm">{step}</span>
+        )}
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function StepConnector({ isComplete }) {
+  const lineVariants = {
+    incomplete: { width: 0, backgroundColor: 'transparent' },
+    complete: { width: '100%', backgroundColor: '#5227FF' }
+  };
+
+  return (
+    <div className="relative mx-2 h-0.5 flex-1 overflow-hidden rounded bg-neutral-600">
+      <motion.div
+        className="absolute left-0 top-0 h-full"
+        variants={lineVariants}
+        initial={false}
+        animate={isComplete ? 'complete' : 'incomplete'}
+        transition={{ duration: 0.4 }}
+      />
+    </div>
+  );
+}
+
+function CheckIcon(props) {
+  return (
+    <svg {...props} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <motion.path
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{ delay: 0.1, type: 'tween', ease: 'easeOut', duration: 0.3 }}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M5 13l4 4L19 7"
+      />
+    </svg>
+  );
+}
+import { useEffect, useRef } from 'react';
+import { Renderer, Program, Mesh, Triangle } from 'ogl';
+
+const hexToRgb = hex => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) return [1, 0.5, 0.2];
+  return [parseInt(result[1], 16) / 255, parseInt(result[2], 16) / 255, parseInt(result[3], 16) / 255];
+};
+
+const vertex = `#version 300 es
+precision highp float;
+in vec2 position;
+in vec2 uv;
+out vec2 vUv;
+void main() {
+  vUv = uv;
+  gl_Position = vec4(position, 0.0, 1.0);
+}
+`;
+
+const fragment = `#version 300 es
+precision highp float;
+uniform vec2 iResolution;
+uniform float iTime;
+uniform vec3 uCustomColor;
+uniform float uUseCustomColor;
+uniform float uSpeed;
+uniform float uDirection;
+uniform float uScale;
+uniform float uOpacity;
+uniform vec2 uMouse;
+uniform float uMouseInteractive;
+out vec4 fragColor;
+
+void mainImage(out vec4 o, vec2 C) {
+  vec2 center = iResolution.xy * 0.5;
+  C = (C - center) / uScale + center;
+  
+  vec2 mouseOffset = (uMouse - center) * 0.0002;
+  C += mouseOffset * length(C - center) * step(0.5, uMouseInteractive);
+  
+  float i, d, z, T = iTime * uSpeed * uDirection;
+  vec3 O, p, S;
+
+  for (vec2 r = iResolution.xy, Q; ++i < 60.; O += o.w/d*o.xyz) {
+    p = z*normalize(vec3(C-.5*r,r.y)); 
+    p.z -= 4.; 
+    S = p;
+    d = p.y-T;
+    
+    p.x += .4*(1.+p.y)*sin(d + p.x*0.1)*cos(.34*d + p.x*0.05); 
+    Q = p.xz *= mat2(cos(p.y+vec4(0,11,33,0)-T)); 
+    z+= d = abs(sqrt(length(Q*Q)) - .25*(5.+S.y))/3.+8e-4; 
+    o = 1.+sin(S.y+p.z*.5+S.z-length(S-p)+vec4(2,1,0,8));
+  }
+  
+  o.xyz = tanh(O/1e4);
+}
+
+bool finite1(float x){ return !(isnan(x) || isinf(x)); }
+vec3 sanitize(vec3 c){
+  return vec3(
+    finite1(c.r) ? c.r : 0.0,
+    finite1(c.g) ? c.g : 0.0,
+    finite1(c.b) ? c.b : 0.0
+  );
+}
+
+void main() {
+  vec4 o = vec4(0.0);
+  mainImage(o, gl_FragCoord.xy);
+  vec3 rgb = sanitize(o.rgb);
+  
+  float intensity = (rgb.r + rgb.g + rgb.b) / 3.0;
+  vec3 customColor = intensity * uCustomColor;
+  vec3 finalColor = mix(rgb, customColor, step(0.5, uUseCustomColor));
+  
+  float alpha = length(rgb) * uOpacity;
+  fragColor = vec4(finalColor, alpha);
+}`;
+
+export const Plasma = ({
+  color = '#ffffff',
+  speed = 1,
+  direction = 'forward',
+  scale = 1,
+  opacity = 1,
+  mouseInteractive = true
+}) => {
+  const containerRef = useRef(null);
+  const mousePos = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const useCustomColor = color ? 1.0 : 0.0;
+    const customColorRgb = color ? hexToRgb(color) : [1, 1, 1];
+
+    const directionMultiplier = direction === 'reverse' ? -1.0 : 1.0;
+
+    const renderer = new Renderer({
+      webgl: 2,
+      alpha: true,
+      antialias: false,
+      dpr: Math.min(window.devicePixelRatio || 1, 2)
+    });
+    const gl = renderer.gl;
+    const canvas = gl.canvas;
+    canvas.style.display = 'block';
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    containerRef.current.appendChild(canvas);
+
+    const geometry = new Triangle(gl);
+
+    const program = new Program(gl, {
+      vertex: vertex,
+      fragment: fragment,
+      uniforms: {
+        iTime: { value: 0 },
+        iResolution: { value: new Float32Array([1, 1]) },
+        uCustomColor: { value: new Float32Array(customColorRgb) },
+        uUseCustomColor: { value: useCustomColor },
+        uSpeed: { value: speed * 0.4 },
+        uDirection: { value: directionMultiplier },
+        uScale: { value: scale },
+        uOpacity: { value: opacity },
+        uMouse: { value: new Float32Array([0, 0]) },
+        uMouseInteractive: { value: mouseInteractive ? 1.0 : 0.0 }
+      }
+    });
+
+    const mesh = new Mesh(gl, { geometry, program });
+
+    const handleMouseMove = e => {
+      if (!mouseInteractive) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      mousePos.current.x = e.clientX - rect.left;
+      mousePos.current.y = e.clientY - rect.top;
+      const mouseUniform = program.uniforms.uMouse.value;
+      mouseUniform[0] = mousePos.current.x;
+      mouseUniform[1] = mousePos.current.y;
+    };
+
+    if (mouseInteractive) {
+      containerRef.current.addEventListener('mousemove', handleMouseMove);
+    }
+
+    const setSize = () => {
+      const rect = containerRef.current.getBoundingClientRect();
+      const width = Math.max(1, Math.floor(rect.width));
+      const height = Math.max(1, Math.floor(rect.height));
+      renderer.setSize(width, height);
+      const res = program.uniforms.iResolution.value;
+      res[0] = gl.drawingBufferWidth;
+      res[1] = gl.drawingBufferHeight;
+    };
+
+    const ro = new ResizeObserver(setSize);
+    ro.observe(containerRef.current);
+    setSize();
+
+    let raf = 0;
+    const t0 = performance.now();
+    const loop = t => {
+      let timeValue = (t - t0) * 0.001;
+      if (direction === 'pingpong') {
+        const pingpongDuration = 10;
+        const segmentTime = timeValue % pingpongDuration;
+        const isForward = Math.floor(timeValue / pingpongDuration) % 2 === 0;
+        const u = segmentTime / pingpongDuration;
+        const smooth = u * u * (3 - 2 * u);
+        const pingpongTime = isForward ? smooth * pingpongDuration : (1 - smooth) * pingpongDuration;
+        program.uniforms.uDirection.value = 1.0;
+        program.uniforms.iTime.value = pingpongTime;
+      } else {
+        program.uniforms.iTime.value = timeValue;
+      }
+      renderer.render({ scene: mesh });
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+      if (mouseInteractive && containerRef.current) {
+        containerRef.current.removeEventListener('mousemove', handleMouseMove);
+      }
+      try {
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        containerRef.current?.removeChild(canvas);
+      } catch {
+        console.warn('Canvas already removed from container');
+      }
+    };
+  }, [color, speed, direction, scale, opacity, mouseInteractive]);
+
+  return <div ref={containerRef} className="w-full h-full overflow-hidden relative" />;
+};
+
+export default Plasma;
