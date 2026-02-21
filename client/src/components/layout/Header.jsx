@@ -23,12 +23,12 @@ const Header = () => {
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-12">
         {/* Logo */}
-        <Link to="/" className="group flex items-center gap-3">
-          <span className="font-display text-h3 tracking-tighter text-foreground transition-colors duration-300 group-hover:text-primary">
+        <Link to="/" className="group flex items-center gap-3 ml-0.5 mr-auto justify-center flex-wrap w-auto self-center text-[20px]">
+          <span className="font-display text-h3 tracking-tighter text-foreground transition-colors duration-300 group-hover:text-primary" style={{ marginLeft: "-6px", marginRight: "-6px" }}>
             Midnight
           </span>
           <div className="h-4 w-px bg-border group-hover:bg-primary/20 transition-colors" />
-          <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground/60">
+          <span className="font-mono text-[12px] uppercase tracking-[0.3em] text-muted-foreground/60" style={{ textAlign: "left", marginLeft: "-6px", marginRight: "-6px" }}>
             Typewriter
           </span>
         </Link>
