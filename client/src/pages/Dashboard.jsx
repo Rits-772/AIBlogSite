@@ -109,75 +109,99 @@ const Dashboard = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="border border-border py-20 text-center transition-colors duration-500"
+            className="border border-border p-12 lg:p-24 bg-card/20 text-center transition-colors duration-500 flex flex-col items-center justify-center max-w-3xl mx-auto"
           >
-            <p className="font-body text-body-lg text-muted-foreground mb-6">
-              No posts yet. Start writing your first piece.
+            <div className="h-px w-12 bg-primary/40 mb-8" />
+            <h2 className="font-display text-h2 text-foreground mb-4">An Empty Page</h2>
+            <p className="font-body text-body-lg text-muted-foreground leading-relaxed max-w-lg mb-10">
+              The cursor blinks. The page is blank. This is where intention begins. Start writing your first piece.
             </p>
             <Link
               to="/write"
-              className="inline-block border border-primary px-8 py-3.5 font-mono text-[10px] uppercase tracking-[0.2em] text-primary transition-all duration-300 hover:bg-primary hover:text-primary-foreground"
+              className="inline-block border border-primary bg-primary px-10 py-4 font-mono text-[10px] uppercase tracking-[0.25em] text-primary-foreground transition-all duration-500 hover:bg-transparent hover:text-primary"
             >
-              Write Your First Post
+              Enter Editor
             </Link>
           </motion.div>
         ) : (
-          <AnimatedList
-            className="space-y-0"
-            distance={20}
-            direction="vertical"
-          >
-            {posts.map((post) => (
-              <article 
-                key={post.id} 
-                className="group border-b border-border py-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between transition-colors duration-500"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span
-                      className={`font-mono text-[10px] uppercase tracking-widest ${
-                        post.status === "published" ? "text-teal" : "text-muted-foreground"
-                      }`}
-                    >
-                      {post.status}
-                    </span>
-                    {post.is_ai_generated && (
-                      <span className="font-mono text-[10px] uppercase tracking-widest text-primary/60">AI Generated</span>
-                    )}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-min">
+            {posts.map((post, index) => {
+              // Determine styling based on index to create a bento effect
+              let containerClass = "p-8 border border-border bg-card/10 backdrop-blur-sm transition-all duration-500 hover:border-primary/40 group flex flex-col justify-between";
+              
+              // First post large (2x2)
+              if (index === 0) {
+                containerClass += " md:col-span-2 lg:col-span-2 lg:row-span-2 bg-card/30";
+              } 
+              // Every 5th post stretches wide (2x1)
+              else if (index % 5 === 0) {
+                containerClass += " md:col-span-2 lg:col-span-2 bg-card/20";
+              }
+              // Default small tile (1x1)
+              else {
+                containerClass += " col-span-1";
+              }
+
+              return (
+                <motion.article 
+                  key={post.id} 
+                  initial={{ opacity: 0, scale: 0.98, y: 20 }}
+                  whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: index * 0.05 }}
+                  className={containerClass}
+                >
+                  <div className="flex flex-col gap-4 mb-8">
+                    <div className="flex items-center gap-3">
+                      <span className={`font-mono text-[10px] uppercase tracking-widest ${post.status === "published" ? "text-teal" : "text-muted-foreground"}`}>
+                        {post.status}
+                      </span>
+                      <div className="h-px w-4 bg-border" />
+                      <span className="font-mono text-[9px] text-muted-foreground/60 uppercase tracking-widest">
+                        {new Date(post.updated_at).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </span>
+                      {post.is_ai_generated && (
+                        <>
+                          <div className="h-px w-4 bg-border hidden sm:block" />
+                          <span className="font-mono text-[9px] uppercase tracking-widest text-primary/60 hidden sm:block">AI Draft</span>
+                        </>
+                      )}
+                    </div>
+
+                    <Link to={`/write/${post.id}`} className="block mt-2">
+                      <h2 className={`${index === 0 ? 'text-h2' : 'text-h3'} font-display text-foreground transition-colors duration-500 group-hover:text-primary leading-tight tracking-tight`}>
+                        {post.title || "Untitled Draft"}
+                      </h2>
+                    </Link>
                   </div>
-                  <Link
-                    to={`/write/${post.id}`}
-                    className="font-display text-h3 text-foreground transition-colors duration-300 hover:text-primary"
-                  >
-                    {post.title || "Untitled"}
-                  </Link>
-                  <p className="mt-1 font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
-                    {new Date(post.updated_at).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                    {" · "}
-                    {post.views || 0} views
-                  </p>
-                </div>
-                <div className="flex items-center gap-6">
-                  <Link
-                    to={`/write/${post.id}`}
-                    className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground transition-all duration-300 hover:text-foreground hover:tracking-[0.15em]"
-                  >
-                    Edit
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(post.id)}
-                    className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground transition-all duration-300 hover:text-destructive hover:tracking-[0.15em]"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </article>
-            ))}
-          </AnimatedList>
+
+                  <div className="mt-auto pt-6 border-t border-border/50 flex justify-between items-center">
+                    <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
+                      {post.views || 0} views
+                    </span>
+                    <div className="flex items-center gap-4">
+                      <Link
+                        to={`/write/${post.id}`}
+                        className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground transition-all duration-300 hover:text-foreground hover:tracking-[0.15em]"
+                      >
+                        Edit
+                      </Link>
+                      <button
+                        onClick={() => handleDelete(post.id)}
+                        className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground transition-all duration-300 hover:text-destructive hover:tracking-[0.15em]"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </motion.article>
+              );
+            })}
+          </div>
         )}
       </motion.div>
     </div>

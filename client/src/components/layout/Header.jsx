@@ -36,11 +36,29 @@ const Header = () => {
         {/* Nav */}
         <nav className="hidden items-center gap-8 md:flex">
           <Link
+            to="/#about"
+            onClick={(e) => {
+              if (window.location.pathname === "/") {
+                e.preventDefault();
+                document.getElementById("about")?.scrollIntoView({ behavior: "smooth" });
+              }
+            }}
+            className="font-mono text-small uppercase tracking-widest text-muted-foreground transition-all duration-300 hover:text-primary hover:tracking-[0.15em]"
+          >
+            About
+          </Link>
+          <Link
             to="/feed"
             className="font-mono text-small uppercase tracking-widest text-muted-foreground transition-all duration-300 hover:text-primary hover:tracking-[0.15em]"
           >
             Feed
           </Link>
+          <a
+            href="mailto:hello@midnight.typewriter"
+            className="font-mono text-small uppercase tracking-widest text-muted-foreground transition-all duration-300 hover:text-primary hover:tracking-[0.15em]"
+          >
+            Contact
+          </a>
           {isLoggedIn ? (
             <>
               <Link

@@ -36,14 +36,14 @@ const Hero = () => {
 
         {/* Headline */}
         <div className="max-w-5xl mb-12 flex flex-col items-start">
-          <div className="h-32 w-full md:h-48 lg:h-72 mb-4 relative -ml-4 pr-12">
+          <div className="h-24 w-full md:h-32 lg:h-48 mb-2 relative -ml-4 pr-12 overflow-visible">
             <TextPressure
               text="Midnight"
               width={true}
               weight={true}
               italic={true}
               textColor="hsl(var(--foreground))"
-              minFontSize={120}
+              minFontSize={80}
               className="!overflow-visible"
             />
           </div>
@@ -51,22 +51,23 @@ const Hero = () => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
-            className="font-display text-foreground leading-[0.9] -mt-4 flex items-start"
-            style={{ fontSize: "49px", justifyContent: "flex-start", gap: "9px" }}
+            className="font-display text-foreground leading-[0.9] -mt-2 flex flex-wrap items-center gap-2 sm:gap-4 text-h2 sm:text-h1 lg:text-[4rem]"
           >
             Write with <span className="italic text-primary font-semibold">intention.</span>
           </motion.h1>
         </div>
 
         {/* Subtext */}
-        <div className="mt-8 max-w-2xl">
-          <SplitText
-            text="A publishing platform that rejects the generic. Where typography carries identity, AI enhances without overtaking, and every word finds its atmosphere."
-            className="font-body text-body-lg text-muted-foreground/80 leading-relaxed"
-            delay={30}
-            textAlign="left"
-          />
-        </div>
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.6 }}
+          className="mt-8 max-w-2xl"
+        >
+          <p className="font-body text-body-lg text-muted-foreground/80 leading-relaxed text-left">
+            A publishing platform that rejects the generic. Where typography carries identity, AI enhances without overtaking, and every word finds its atmosphere.
+          </p>
+        </motion.div>
 
         {/* CTA */}
         <motion.div

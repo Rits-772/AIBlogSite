@@ -32,19 +32,19 @@ const MenuBar = ({ editor }) => {
   ];
 
   return (
-    <div className="flex flex-wrap gap-2 mb-6 pb-4 border-b border-border sticky top-0 bg-background/80 backdrop-blur-sm z-10 transition-colors duration-500">
+    <div className="flex flex-wrap gap-1 mb-8 pb-4 border-b border-border/50 sticky top-20 z-10 transition-colors duration-500 bg-transparent">
       {buttons.map((btn, i) => (
         <button
           key={i}
           onClick={btn.action}
           disabled={btn.disabled}
-          className={`p-2 rounded transition-all duration-200 ${
+          className={`p-2 rounded-md transition-all duration-300 ${
             btn.active && editor.isActive(btn.active) 
-              ? 'text-primary bg-primary/10' 
-              : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+              ? 'text-primary bg-primary/10 shadow-[inset_0_0_0_1px_rgba(var(--primary),0.2)]' 
+              : 'text-muted-foreground/60 hover:text-foreground hover:bg-card/50'
           } ${btn.disabled ? 'opacity-30 cursor-not-allowed' : ''}`}
         >
-          <btn.icon className="h-4 w-4" />
+          <btn.icon className="h-4 w-4" strokeWidth={1.5} />
         </button>
       ))}
     </div>

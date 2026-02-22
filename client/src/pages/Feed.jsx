@@ -69,49 +69,70 @@ const Feed = () => {
               </p>
             </div>
           ) : (
-            <div className="space-y-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-min">
               {posts.map((post, index) => {
                 const authorName = post.profiles?.username || "Anonymous";
+                
+                // Determine styling based on index to create a bento effect
+                let containerClass = "p-8 border border-border bg-card/10 backdrop-blur-sm transition-all duration-500 hover:border-primary/40 group flex flex-col justify-between";
+                
+                // Make the first post large (2x2)
+                if (index === 0) {
+                  containerClass += " md:col-span-2 lg:col-span-2 lg:row-span-2 bg-card/30";
+                } 
+                // Every 5th post stretches wide (2x1)
+                else if (index % 5 === 0) {
+                  containerClass += " md:col-span-2 lg:col-span-2 bg-card/20";
+                }
+                // Default small tile (1x1)
+                else {
+                  containerClass += " col-span-1";
+                }
+
                 return (
                   <motion.article 
                     key={post.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
+                    initial={{ opacity: 0, scale: 0.98, y: 20 }}
+                    whileInView={{ opacity: 1, scale: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6, delay: index * 0.05 }}
-                    className="group border-b border-border py-12 first:pt-0 transition-colors duration-500 hover:border-primary/20 cursor-pointer"
+                    className={containerClass}
                   >
-                    <Link to={`/post/${post.id}`} className="block">
-                      <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
-                        <div className="flex items-center gap-4 lg:w-48 lg:flex-col lg:items-start lg:gap-3">
+                    <Link to={`/post/${post.id}`} className="block h-full flex flex-col">
+                      <div className="flex flex-col gap-4 mb-8">
+                        <div className="flex items-center gap-3">
                           {post.category && (
                             <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
                               {post.category}
                             </span>
                           )}
-                          <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+                          {(post.category) && <div className="h-px w-4 bg-border" />}
+                          <span className="font-mono text-[9px] text-muted-foreground/60 uppercase tracking-widest">
                             {new Date(post.created_at).toLocaleDateString("en-US", {
                               month: "short",
                               day: "numeric",
-                              year: "numeric",
+                              year: "numeric"
                             })}
                           </span>
                         </div>
 
-                        <div className="flex-1 lg:max-w-2xl">
-                          <h2 className="font-display text-h2 text-foreground transition-colors duration-500 group-hover:text-primary leading-tight tracking-tight">
+                        <div>
+                          <h2 className={`${index === 0 ? 'text-h2' : 'text-h3'} font-display text-foreground transition-colors duration-500 group-hover:text-primary leading-tight tracking-tight`}>
                             {post.title}
                           </h2>
-                          <p className="mt-5 font-body text-body-lg text-muted-foreground/70 leading-relaxed max-w-xl">
-                            {getExcerpt(post.content)}
+                          <p className={`mt-4 font-body ${index === 0 ? 'text-body-lg' : 'text-body'} text-muted-foreground/70 leading-relaxed line-clamp-3`}>
+                            {getExcerpt(post.content, index === 0 ? 300 : Math.random() > 0.5 ? 150 : 100)}
                           </p>
                         </div>
+                      </div>
 
-                        <div className="lg:w-48 lg:text-right">
-                          <span className="font-body text-body italic text-muted-foreground/60">
-                            by {authorName}
-                          </span>
-                        </div>
+                      <div className="mt-auto pt-6 border-t border-border/50 flex justify-between items-center">
+                        <span className="font-body text-small italic text-muted-foreground/80">
+                          by {authorName}
+                        </span>
+                        <span className="font-mono text-[9px] uppercase tracking-widest text-primary/0 transition-all duration-300 group-hover:text-primary">
+                          Read →
+                        </span>
                       </div>
                     </Link>
                   </motion.article>

@@ -32,7 +32,7 @@ const MOCK_POSTS = [
 
 const EditorialFeed = () => {
   return (
-    <section className="bg-atmosphere py-32">
+    <section className="bg-card/40 py-32 border-y border-border/50">
       <div className="mx-auto max-w-7xl px-6 lg:px-12">
         {/* Section header */}
         <div className="mb-20 flex items-end justify-between border-b border-border pb-6">
@@ -58,49 +58,66 @@ const EditorialFeed = () => {
         </div>
 
         {/* Posts */}
-        <div className="space-y-0">
-          {MOCK_POSTS.map((post, index) => (
-            <motion.article
-              key={post.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              className="group cursor-pointer border-b border-border py-10 transition-colors duration-500 hover:border-primary/30 first:pt-0"
-            >
-              <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-                {/* Left: meta */}
-                <div className="flex items-center gap-4 lg:w-48 lg:flex-col lg:items-start lg:gap-2">
-                  <span className="font-mono text-xs uppercase tracking-widest text-primary mr-2 lg:mr-0">
-                    {post.category}
-                  </span>
-                  <span className="font-mono text-xs text-muted-foreground mr-2 lg:mr-0">
-                    {post.date}
-                  </span>
-                  <span className="hidden font-mono text-xs text-muted-foreground lg:block">
-                    {post.readTime} read
-                  </span>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-min">
+          {MOCK_POSTS.map((post, index) => {
+            // Determine styling based on index to create a bento effect
+            let containerClass = "p-8 border border-border bg-card/10 backdrop-blur-sm transition-all duration-500 hover:border-primary/40 group flex flex-col justify-between";
+            
+            // First post large (2x2)
+            if (index === 0) {
+              containerClass += " md:col-span-2 lg:col-span-2 lg:row-span-2 bg-card/30";
+            } 
+            // Third post stretches wide (2x1) 
+            // Modifying logic slightly here for a 3-item array to make it look intentionally asymmetric
+            else if (index === 2) {
+              containerClass += " md:col-span-2 lg:col-span-2 bg-card/20";
+            }
+            // Default small tile (1x1)
+            else {
+              containerClass += " col-span-1";
+            }
+
+            return (
+              <motion.article
+                key={post.id}
+                initial={{ opacity: 0, scale: 0.98, y: 20 }}
+                whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className={containerClass}
+              >
+                <div className="flex flex-col gap-4 mb-8">
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
+                      {post.category}
+                    </span>
+                    <div className="h-px w-4 bg-border" />
+                    <span className="font-mono text-[9px] text-muted-foreground/60 uppercase tracking-widest">
+                      {post.date}
+                    </span>
+                  </div>
+
+                  <div>
+                    <h3 className={`${index === 0 ? 'text-h2' : 'text-h3'} font-display text-foreground transition-colors duration-500 group-hover:text-primary leading-tight tracking-tight`}>
+                      {post.title}
+                    </h3>
+                    <p className={`mt-4 font-body ${index === 0 ? 'text-body-lg' : 'text-body'} text-muted-foreground/70 leading-relaxed line-clamp-3`}>
+                      {post.excerpt}
+                    </p>
+                  </div>
                 </div>
 
-                {/* Center: content */}
-                <div className="flex-1 lg:max-w-2xl">
-                  <h3 className="font-display text-h3 text-foreground transition-colors duration-500 group-hover:text-primary leading-tight">
-                    {post.title}
-                  </h3>
-                  <p className="mt-5 font-body text-body-lg text-muted-foreground/70 leading-relaxed max-w-xl">
-                    {post.excerpt}
-                  </p>
-                </div>
-
-                {/* Right: author */}
-                <div className="lg:w-40 lg:text-right">
-                  <span className="font-body text-small italic text-muted-foreground">
+                <div className="mt-auto pt-6 border-t border-border/50 flex justify-between items-center">
+                  <span className="font-body text-small italic text-muted-foreground/80">
                     by {post.author}
                   </span>
+                  <span className="font-mono text-[9px] uppercase tracking-widest text-primary/0 transition-all duration-300 group-hover:text-primary">
+                    Read →
+                  </span>
                 </div>
-              </div>
-            </motion.article>
-          ))}
+              </motion.article>
+            );
+          })}
         </div>
       </div>
     </section>

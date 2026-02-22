@@ -3,7 +3,7 @@ import { Feather, Wind, Sparkles, PenTool } from "lucide-react";
 
 const About = () => {
   return (
-    <section className="bg-background py-32 transition-colors duration-500">
+    <section id="about" className="bg-background py-32 transition-colors duration-500 border-y border-border/30">
       <div className="mx-auto max-w-7xl px-6 lg:px-12">
         <div className="flex flex-col gap-16 lg:flex-row lg:items-center">
           <div className="lg:w-1/2">

@@ -1,13 +1,9 @@
 import { motion } from "framer-motion";
-import Plasma from "../animations/Plasma";
 
 const AIShowcase = () => {
   return (
-    <section className="relative border-t border-border bg-background py-32 overflow-hidden transition-colors duration-500">
-      {/* Background Plasma effect */}
-      <div className="absolute inset-0 opacity-10 pointer-events-none">
-        <Plasma color="hsl(var(--primary))" speed={0.5} opacity={0.3} />
-      </div>
+    <section className="relative border-t border-border bg-transparent py-32 overflow-hidden transition-colors duration-500">
+
       {/* Subtle accent glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
       

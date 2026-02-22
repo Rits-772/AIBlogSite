@@ -1,61 +1,44 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../integrations/supabase/client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import HCaptcha from "@hcaptcha/react-hcaptcha";
-import ClickSpark from "../components/animations/ClickSpark";
 
 const Auth = () => {
-  const [mode, setMode] = useState("login"); // login, signup, forgot-password, otp
+  const [mode, setMode] = useState("login"); // login, signup, forgot-password
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
-  const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState("");
-  const captchaRef = useRef(null);
   const navigate = useNavigate();
 
   const handleModeChange = (newMode) => {
     setMode(newMode);
-    setCaptchaToken("");
-    if (captchaRef.current) captchaRef.current.resetCaptcha();
   };
 
-  const onCaptchaChange = (token) => {
-    setCaptchaToken(token);
+  const handleAuthError = (error) => {
+    // Provide cleaner error messages instead of raw 400 Bad Request
+    if (error.status === 400 && error.message.includes("Invalid login credentials")) {
+      toast.error("Incorrect email or password. Please try again.");
+    } else {
+      toast.error(error.message || "An authentication error occurred.");
+    }
   };
 
   const handleLogin = async () => {
-    if (!captchaToken) {
-      toast.error("Please complete the captcha");
-      return;
-    }
-    const { error } = await supabase.auth.signInWithPassword({ 
-      email, 
-      password,
-      options: { captchaToken }
-    });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
     navigate("/dashboard");
   };
 
   const handleSignUp = async () => {
-    if (!captchaToken) {
-      toast.error("Please complete the captcha");
-      return;
-    }
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { 
-        data: { username },
-        captchaToken
-      },
+      options: { data: { username } }
     });
     if (error) throw error;
-    toast.info("Account created. Check your email for verification.");
+    toast.info("Account created successfully. Check your email to verify.");
     setMode("login");
   };
 
@@ -68,17 +51,6 @@ const Auth = () => {
     setMode("login");
   };
 
-  const handleVerifyOTP = async () => {
-    const { error } = await supabase.auth.verifyOtp({
-      email,
-      token: otp,
-      type: 'signup' // or 'recovery' depending on flow
-    });
-    if (error) throw error;
-    toast.success("Identity verified.");
-    navigate("/dashboard");
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -87,256 +59,222 @@ const Auth = () => {
       if (mode === "login") await handleLogin();
       else if (mode === "signup") await handleSignUp();
       else if (mode === "forgot-password") await handleForgotPassword();
-      else if (mode === "otp") await handleVerifyOTP();
     } catch (error) {
-      toast.error(error.message);
-      if (captchaRef.current) captchaRef.current.resetCaptcha();
-      setCaptchaToken("");
+      console.error("Auth Error:", error);
+      handleAuthError(error);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <ClickSpark sparkColor="hsl(var(--primary))">
-      <div className="min-h-screen bg-atmosphere-deep flex items-center justify-center px-6 transition-colors duration-500">
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6 }}
-        className="w-full max-w-md"
-      >
-        {/* Back */}
-        <Link
-          to="/"
-          className="inline-block mb-12 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground transition-all duration-300 hover:text-foreground"
-        >
-          ← Back
-        </Link>
-
-        {/* Header */}
-        <div className="mb-10">
-          <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-primary">
-            {mode === "login" && "Welcome Back"}
-            {mode === "signup" && "Join Us"}
-            {mode === "forgot-password" && "Reset Password"}
-            {mode === "otp" && "Verify Identity"}
+    <div className="flex min-h-screen bg-background text-foreground selection:bg-primary/30">
+      {/* Left Panel - Atmospheric Visual */}
+      <div className="hidden w-1/2 lg:flex flex-col justify-between border-r border-border p-12 relative overflow-hidden bg-atmosphere-deep">
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="/assets/hero-typewriter.jpg" 
+            alt="Atmosphere" 
+            className="h-full w-full object-cover opacity-20 grayscale mix-blend-overlay"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+        </div>
+        
+        <div className="relative z-10 flex items-center gap-4">
+          <span className="font-display text-h3 tracking-tighter text-foreground">
+            Midnight
           </span>
-          <h1 className="mt-2 font-display text-h1 text-foreground">
-            {mode === "login" && "Sign In"}
-            {mode === "signup" && "Create Account"}
-            {mode === "forgot-password" && "Forgot Password"}
-            {mode === "otp" && "Enter OTP"}
-          </h1>
-          <p className="mt-3 font-body text-body text-muted-foreground">
-            {mode === "login" && "Enter your editorial space."}
-            {mode === "signup" && "Begin your writing journey."}
-            {mode === "forgot-password" && "We'll send you a recovery link."}
-            {mode === "otp" && "Check your email for a 6-digit code."}
-          </p>
+          <div className="h-4 w-px bg-primary/40" />
+          <span className="font-mono text-[10px] uppercase tracking-[0.4em] text-muted-foreground">
+            Typewriter
+          </span>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <AnimatePresence mode="wait">
-            {mode === "signup" ? (
-              <motion.div
-                key="signup-fields"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
-                className="space-y-6"
-              >
-                <div>
-                  <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2 block">
-                    Username
-                  </label>
-                  <input
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required
-                    className="w-full bg-transparent border-b border-border py-3 font-body text-body text-foreground outline-none transition-colors duration-300 focus:border-primary placeholder:text-muted-foreground/30"
-                    placeholder="Your pen name"
-                  />
-                </div>
-                <div>
-                  <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2 block">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="w-full bg-transparent border-b border-border py-3 font-body text-body text-foreground outline-none transition-colors duration-300 focus:border-primary placeholder:text-muted-foreground/30"
-                    placeholder="writer@example.com"
-                  />
-                </div>
-                <div>
-                  <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2 block">
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={6}
-                    className="w-full bg-transparent border-b border-border py-3 font-body text-body text-foreground outline-none transition-colors duration-300 focus:border-primary placeholder:text-muted-foreground/30"
-                    placeholder="••••••••"
-                  />
-                </div>
-              </motion.div>
-            ) : mode === "login" ? (
-              <motion.div
-                key="login-fields"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
-                className="space-y-6"
-              >
-                <div>
-                  <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2 block">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="w-full bg-transparent border-b border-border py-3 font-body text-body text-foreground outline-none transition-colors duration-300 focus:border-primary placeholder:text-muted-foreground/30"
-                    placeholder="writer@example.com"
-                  />
-                </div>
-                <div>
-                  <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2 block">
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="w-full bg-transparent border-b border-border py-3 font-body text-body text-foreground outline-none transition-colors duration-300 focus:border-primary placeholder:text-muted-foreground/30"
-                    placeholder="••••••••"
-                  />
-                </div>
-              </motion.div>
-            ) : mode === "forgot-password" ? (
-              <motion.div
-                key="forgot-password-field"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
-              >
-                <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2 block">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full bg-transparent border-b border-border py-3 font-body text-body text-foreground outline-none transition-colors duration-300 focus:border-primary placeholder:text-muted-foreground/30"
-                  placeholder="writer@example.com"
-                />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="otp-field"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.3 }}
-              >
-                <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2 block">
-                  Verification Code
-                </label>
-                <input
-                  type="text"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  required
-                  className="w-full bg-transparent border-b border-border py-3 font-mono text-h2 text-center text-primary tracking-[0.5em] outline-none transition-colors duration-300 focus:border-primary placeholder:text-muted-foreground/10"
-                  placeholder="000000"
-                  maxLength={6}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {(mode === "login" || mode === "signup") && (
-            <div className="flex justify-center py-4 bg-muted/30 rounded-lg">
-              <HCaptcha
-                sitekey="10000000-ffff-ffff-ffff-000000000001" // Test sitekey
-                onVerify={onCaptchaChange}
-                ref={captchaRef}
-                theme="dark"
-              />
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full border border-primary bg-primary py-3.5 font-mono text-[10px] uppercase tracking-[0.2em] text-primary-foreground transition-all duration-500 hover:bg-transparent hover:text-primary disabled:opacity-50"
+        <div className="relative z-10 max-w-md">
+          <motion.p 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.2 }}
+            className="font-display text-h2 leading-tight tracking-tight text-foreground/90"
           >
-            {loading ? "..." : 
-              mode === "login" ? "Enter" : 
-              mode === "signup" ? "Create Account" : 
-              mode === "forgot-password" ? "Send Link" : 
-              "Verify"}
-          </button>
-        </form>
-
-        {/* Toggle & Extra Links */}
-        <div className="mt-8 space-y-4 text-center">
-          <p className="font-body text-small text-muted-foreground">
-            {mode === "login" && (
-              <>
-                No account yet?{" "}
-                <button onClick={() => handleModeChange("signup")} className="text-primary hover:text-foreground">Create one</button>
-              </>
-            )}
-            {mode === "signup" && (
-              <>
-                Already have an account?{" "}
-                <button onClick={() => handleModeChange("login")} className="text-primary hover:text-foreground">Sign in</button>
-              </>
-            )}
-            {mode === "forgot-password" && (
-              <button onClick={() => handleModeChange("login")} className="text-primary hover:text-foreground">Back to Sign In</button>
-            )}
-            {mode === "otp" && (
-              <button onClick={() => handleModeChange("login")} className="text-primary hover:text-foreground">Go Back</button>
-            )}
-          </p>
-          
-          {mode === "login" && (
-            <button 
-              onClick={() => handleModeChange("forgot-password")}
-              className="block w-full font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
-            >
-              Forgot Password?
-            </button>
-          )}
-
-          {mode === "login" && (
-            <button 
-              onClick={() => handleModeChange("otp")}
-              className="block w-full font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60 hover:text-primary transition-colors"
-            >
-              Verify with OTP instead?
-            </button>
-          )}
+            "The most meaningful work often happens in the <span className="text-primary italic">pauses</span>."
+          </motion.p>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, delay: 0.6 }}
+            className="mt-8 flex items-center gap-3"
+          >
+            <div className="h-px w-8 bg-primary/40" />
+            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              A workspace for thought
+            </span>
+          </motion.div>
         </div>
-      </motion.div>
+      </div>
+
+      {/* Right Panel - Form */}
+      <div className="flex w-full lg:w-1/2 flex-col items-center justify-center p-6 sm:p-12 relative">
+        {/* Back button (Mobile mainly) */}
+        <div className="absolute top-8 left-8">
+          <Link
+            to="/"
+            className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground transition-all duration-300 hover:text-foreground hover:-translate-x-1 inline-block"
+          >
+            ← Home
+          </Link>
+        </div>
+
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6 }}
+          className="w-full max-w-[400px]"
+        >
+          {/* Header */}
+          <div className="mb-12">
+            <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-primary">
+              {mode === "login" && "Authentication"}
+              {mode === "signup" && "Registration"}
+              {mode === "forgot-password" && "Recovery"}
+            </span>
+            <h1 className="mt-2 font-display text-[40px] leading-none text-foreground tracking-tight">
+              {mode === "login" && "Welcome Back."}
+              {mode === "signup" && "Create Space."}
+              {mode === "forgot-password" && "Reset Access."}
+            </h1>
+            <p className="mt-4 font-body text-body text-muted-foreground">
+              {mode === "login" && "Enter your credentials to access your workspace."}
+              {mode === "signup" && "Join a publishing platform built for intention."}
+              {mode === "forgot-password" && "We'll email you a secure link to reset your password."}
+            </p>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={mode} // Re-animates when mode changes
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-6"
+              >
+                {mode === "signup" && (
+                  <div className="group relative">
+                    <input
+                      type="text"
+                      id="username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      required
+                      placeholder=" "
+                      className="peer w-full bg-transparent border-b border-border py-4 font-body text-body text-foreground outline-none transition-colors focus:border-primary"
+                    />
+                    <label 
+                      htmlFor="username"
+                      className="absolute left-0 top-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60 transition-all peer-focus:-top-4 peer-focus:text-[9px] peer-focus:text-primary peer-valid:-top-4 peer-valid:text-[9px]"
+                    >
+                      Writer Alias
+                    </label>
+                  </div>
+                )}
+
+                <div className="group relative">
+                  <input
+                    type="email"
+                    id="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    placeholder=" "
+                    className="peer w-full bg-transparent border-b border-border py-4 font-body text-body text-foreground outline-none transition-colors focus:border-primary"
+                  />
+                  <label 
+                    htmlFor="email"
+                    className="absolute left-0 top-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60 transition-all peer-focus:-top-4 peer-focus:text-[9px] peer-focus:text-primary peer-valid:-top-4 peer-valid:text-[9px]"
+                  >
+                    Email Address
+                  </label>
+                </div>
+
+                {mode !== "forgot-password" && (
+                  <div className="group relative">
+                    <input
+                      type="password"
+                      id="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      placeholder=" "
+                      className="peer w-full bg-transparent border-b border-border py-4 font-body text-body text-foreground outline-none transition-colors focus:border-primary"
+                    />
+                    <label 
+                      htmlFor="password"
+                      className="absolute left-0 top-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60 transition-all peer-focus:-top-4 peer-focus:text-[9px] peer-focus:text-primary peer-valid:-top-4 peer-valid:text-[9px]"
+                    >
+                      Password
+                    </label>
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="group relative w-full overflow-hidden border border-primary bg-primary py-4 font-mono text-[10px] uppercase tracking-[0.25em] text-primary-foreground transition-all duration-500 hover:bg-transparent hover:text-primary disabled:opacity-50"
+            >
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                {loading ? "Authenticating..." : 
+                 mode === "login" ? "Enter Workspace" : 
+                 mode === "signup" ? "Begin Journey" : 
+                 "Send Recovery Link"}
+              </span>
+            </button>
+          </form>
+
+          {/* Toggle Links */}
+          <div className="mt-12 space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="h-px flex-1 bg-border" />
+              <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground/50">
+                Or
+              </span>
+              <div className="h-px flex-1 bg-border" />
+            </div>
+
+            <div className="flex flex-col items-center gap-3 pt-4">
+              {mode === "login" ? (
+                <>
+                  <button 
+                    onClick={() => handleModeChange("signup")} 
+                    className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Create an account
+                  </button>
+                  <button 
+                    onClick={() => handleModeChange("forgot-password")}
+                    className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60 hover:text-primary transition-colors"
+                  >
+                    Forgot Password?
+                  </button>
+                </>
+              ) : (
+                <button 
+                  onClick={() => handleModeChange("login")} 
+                  className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Return to Sign In
+                </button>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      </div>
     </div>
-    </ClickSpark>
   );
 };
 
