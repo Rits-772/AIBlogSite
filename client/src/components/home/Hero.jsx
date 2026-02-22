@@ -79,7 +79,7 @@ const Hero = () => {
           <Link to="/auth" className="group relative border border-primary bg-primary/90 px-10 py-4 font-mono text-[14px] uppercase tracking-[0.25em] text-primary-foreground transition-all duration-500 hover:bg-transparent hover:text-primary">
             Begin Writing
           </Link>
-          <Link to="/feed" className="font-mono text-[16px] uppercase tracking-[0.25em] text-muted-foreground transition-all duration-300 hover:text-primary hover:tracking-[0.3em]">
+          <Link to="/feed" className="font-mono text-[16px] uppercase tracking-[0.25em] text-muted-foreground transition-all duration-300 hover:text-primary hover:tracking-[0.3em] pt-[15px] pb-[15px]">
             Explore Feed →
           </Link>
         </motion.div>

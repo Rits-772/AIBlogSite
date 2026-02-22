@@ -100,8 +100,8 @@ const Dashboard = () => {
         className="mx-auto max-w-7xl px-6 py-16 lg:px-12"
       >
         <div className="mb-12">
-          <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-primary">Dashboard</span>
-          <h1 className="mt-2 font-display text-h1 text-foreground transition-colors duration-500">Your Posts</h1>
+          <span className="font-mono text-[20px] uppercase tracking-[0.25em] text-primary">Dashboard</span>
+          <h1 className="mt-2 font-display text-[18px] text-foreground transition-colors duration-500">Your Posts</h1>
         </div>
 
         {posts.length === 0 ? (

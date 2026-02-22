@@ -61,7 +61,7 @@ const EditorialFeed = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-min">
           {MOCK_POSTS.map((post, index) => {
             // Determine styling based on index to create a bento effect
-            let containerClass = "p-8 border border-border bg-card/10 backdrop-blur-sm transition-all duration-500 hover:border-primary/40 group flex flex-col justify-between";
+            let containerClass = "p-8 border border-border bg-card/10 backdrop-blur-sm transition-all duration-500 hover:border-primary/40 group flex flex-col justify-between gap-0";
             
             // First post large (2x2)
             if (index === 0) {
@@ -86,7 +86,7 @@ const EditorialFeed = () => {
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 className={`${containerClass} m-0`}
               >
-                <div className="flex flex-col gap-4 mb-8">
+                <div className="flex flex-col gap-0 mb-8">
                   <div className="flex items-center gap-3">
                     <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
                       {post.category}
