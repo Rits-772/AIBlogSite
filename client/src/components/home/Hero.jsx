@@ -20,7 +20,7 @@ const Hero = () => {
       {/* Content */}
       <div className="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col justify-end px-6 pb-24 pt-32 lg:px-12">
         {/* Tagline */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
@@ -28,7 +28,7 @@ const Hero = () => {
         >
           <div className="flex items-center gap-4">
             <div className="h-[1px] w-12 bg-primary/40" />
-            <span className="font-mono text-[9px] md:text-[10px] uppercase tracking-[0.5em] text-primary/80">
+            <span className="font-mono text-[21px] uppercase tracking-[0.5em] text-primary/80 italic">
               AI-Assisted Editorial Publishing
             </span>
           </div>
@@ -47,13 +47,14 @@ const Hero = () => {
               className="!overflow-visible"
             />
           </div>
-          <motion.h1 
+          <motion.h1
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
-            className="font-display text-h1 text-foreground leading-[0.9] -mt-4"
+            className="font-display text-foreground leading-[0.9] -mt-4 flex items-start"
+            style={{ fontSize: "49px", justifyContent: "flex-start", gap: "9px" }}
           >
-            Write with <span className="italic text-primary">intention.</span>
+            Write with <span className="italic text-primary font-semibold">intention.</span>
           </motion.h1>
         </div>
 
@@ -68,11 +69,11 @@ const Hero = () => {
         </div>
 
         {/* CTA */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.8 }}
-          className="mt-12 flex flex-wrap items-center gap-8"
+          className="mt-12 flex flex-wrap items-center gap-8 text-[11px]"
         >
           <Link to="/auth" className="group relative border border-primary bg-primary/90 px-10 py-4 font-mono text-[10px] uppercase tracking-[0.25em] text-primary-foreground transition-all duration-500 hover:bg-transparent hover:text-primary">
             Begin Writing
