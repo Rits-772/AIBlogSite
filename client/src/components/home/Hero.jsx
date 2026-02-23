@@ -51,7 +51,7 @@ const Hero = () => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
-            className="font-display text-foreground leading-[0.9] -mt-1 mb-8 flex flex-wrap items-stretch gap-2 sm:gap-4 text-[29px] sm:text-h1 lg:text-[4rem] pt-10 pb-0"
+            className="font-display text-foreground leading-[0.9] mt-0 mb-8 flex flex-wrap items-stretch gap-2 sm:gap-4 text-[29px] sm:text-h1 lg:text-[4rem] pt-10 pb-0"
           >
             Write with <span className="italic text-primary font-semibold">intention.</span>
           </motion.h1>
@@ -64,7 +64,7 @@ const Hero = () => {
           transition={{ duration: 0.8, delay: 0.6 }}
           className="mt-8 max-w-2xl"
         >
-          <p className="font-body text-body-lg text-muted-foreground/80 leading-relaxed text-left m-0 p-0">
+          <p className="font-body text-body-lg text-muted-foreground/80 leading-relaxed text-left m-0 p-0 -mt-[60px]">
             A publishing platform that rejects the generic. Where typography carries identity, AI enhances without overtaking, and every word finds its atmosphere.
           </p>
         </motion.div>
