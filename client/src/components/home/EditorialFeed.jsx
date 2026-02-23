@@ -44,15 +44,15 @@ const EditorialFeed = () => {
           >
             <div className="flex items-center gap-3 mb-2">
               <div className="h-px w-6 bg-primary/60" />
-              <span className="font-mono text-[10px] uppercase tracking-[0.4em] text-primary/80">
+              <span className="font-mono text-[15px] uppercase tracking-[0.4em] text-primary/80">
                 Latest
               </span>
             </div>
-            <h2 className="font-display text-h2 text-foreground tracking-tight">
+            <h2 className="font-display text-[25px] text-foreground tracking-tight">
               From the Feed
             </h2>
           </motion.div>
-          <button className="hidden font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/60 transition-all duration-300 hover:text-primary sm:block border-b border-transparent hover:border-primary/30">
+          <button className="hidden font-mono text-[12px] uppercase tracking-[0.3em] text-muted-foreground/60 transition-all duration-300 hover:text-primary sm:block border-b border-transparent hover:border-primary/30">
             View All Essays —
           </button>
         </div>
@@ -61,7 +61,7 @@ const EditorialFeed = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-min">
           {MOCK_POSTS.map((post, index) => {
             // Determine styling based on index to create a bento effect
-            let containerClass = "p-8 border border-border bg-card/10 backdrop-blur-sm transition-all duration-500 hover:border-primary/40 group flex flex-col justify-between";
+            let containerClass = "p-8 border border-border bg-card/10 backdrop-blur-sm transition-all duration-500 hover:border-primary/40 group flex flex-col justify-between gap-0";
             
             // First post large (2x2)
             if (index === 0) {
@@ -84,9 +84,9 @@ const EditorialFeed = () => {
                 whileInView={{ opacity: 1, scale: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
-                className={containerClass}
+                className={`${containerClass} m-0`}
               >
-                <div className="flex flex-col gap-4 mb-8">
+                <div className="flex flex-col gap-0 mb-8">
                   <div className="flex items-center gap-3">
                     <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
                       {post.category}

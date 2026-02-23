@@ -237,16 +237,16 @@ const Auth = () => {
           </form>
 
           {/* Toggle Links */}
-          <div className="mt-12 space-y-4">
+          <div className="mt-12 space-y-4 text-[20px]">
             <div className="flex items-center gap-4">
               <div className="h-px flex-1 bg-border" />
-              <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground/50">
+              <span className="font-mono text-[12px] uppercase tracking-widest text-muted-foreground/50">
                 Or
               </span>
               <div className="h-px flex-1 bg-border" />
             </div>
 
-            <div className="flex flex-col items-center gap-3 pt-4">
+            <div className="flex flex-col items-center gap-3 pt-4 text-[12px]">
               {mode === "login" ? (
                 <>
                   <button 

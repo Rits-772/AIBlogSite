@@ -15,11 +15,11 @@ const About = () => {
             >
               <div className="flex items-center gap-3 mb-6">
                 <div className="h-px w-8 bg-teal/40" />
-                <span className="font-mono text-[10px] uppercase tracking-[0.4em] text-teal">
+                <span className="font-mono text-[15px] uppercase tracking-[0.4em] text-teal">
                   Our Philosophy
                 </span>
               </div>
-              <h2 className="mt-2 font-display text-h2 text-foreground leading-tight">
+              <h2 className="mt-2 font-display text-[25px] text-foreground leading-tight">
                 For those who think <br />
                 <span className="italic text-primary">before they publish.</span>
               </h2>
@@ -61,7 +61,7 @@ const About = () => {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: i * 0.1 }}
-                className="border border-border p-10 bg-card/30 backdrop-blur-sm transition-all duration-500 hover:border-primary/30 group"
+                className="border border-border p-10 bg-card/30 backdrop-blur-sm transition-all duration-500 hover:border-primary/30 group font-semibold"
               >
                 <item.icon className="w-6 h-6 text-primary/60 mb-6 transition-transform duration-500 group-hover:scale-110" />
                 <h4 className="font-display text-h4 text-foreground mb-4">{item.title}</h4>
