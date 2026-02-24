@@ -69,7 +69,7 @@ const Header = () => {
               </Link>
               <Link
                 to="/dashboard"
-                className="border border-primary px-5 py-2 font-mono text-xs uppercase tracking-widest text-primary transition-all duration-300 hover:bg-primary hover:text-primary-foreground"
+                className="border border-primary px-5 py-2 font-mono text-xs uppercase tracking-widest text-primary transition-all duration-300 hover:bg-primary hover:text-primary-foreground rounded-[15px] overflow-hidden"
               >
                 Dashboard
               </Link>
