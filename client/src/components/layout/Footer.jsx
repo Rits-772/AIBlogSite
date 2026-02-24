@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 const Footer = () => {
   return (
     <footer className="border-t border-border bg-background transition-colors duration-500">
@@ -9,6 +11,13 @@ const Footer = () => {
             <p className="mt-4 font-body text-[17px] text-muted-foreground leading-relaxed">
               A literary publishing space where words matter more than widgets. Crafted for writers who reject the generic.
             </p>
+            <div className="mt-6 flex flex-wrap gap-4 font-mono text-[9px] uppercase tracking-widest text-muted-foreground/60">
+              <Link to="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
+              <span className="text-border">/</span>
+              <Link to="/terms" className="hover:text-primary transition-colors">Terms of Service</Link>
+              <span className="text-border">/</span>
+              <a href="/sitemap.xml" className="hover:text-primary transition-colors">Sitemap</a>
+            </div>
           </div>
 
           {/* Links */}

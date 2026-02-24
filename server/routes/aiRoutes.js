@@ -1,6 +1,6 @@
 const express = require('express');
 const { body } = require('express-validator');
-const { generatePost } = require('../controllers/aiController');
+const { generatePost, summarizePost, generateReply } = require('../controllers/aiController');
 const { protect } = require('../middleware/authMiddleware');
 const { aiLimiter } = require('../middleware/rateLimiter');
 
@@ -42,5 +42,11 @@ router.post(
   ],
   generatePost
 );
+
+// POST /api/ai/summarize
+router.post('/summarize', aiLimiter, summarizePost);
+
+// POST /api/ai/reply
+router.post('/reply', aiLimiter, generateReply);
 
 module.exports = router;

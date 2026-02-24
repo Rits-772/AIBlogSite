@@ -1,6 +1,7 @@
 # Dependencies
 node_modules/
 temp_artisan/
+Abstract/
 
 # Environment
 .env
@@ -30,3 +31,5 @@ Thumbs.db
 coverage/
 
 .config/
+
+Pre-launch checklist

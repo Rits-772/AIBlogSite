@@ -9,6 +9,8 @@ import PostEditor from "./pages/PostEditor";
 import PostDetail from "./pages/PostDetail";
 import Feed from "./pages/Feed";
 import ResetPassword from "./pages/ResetPassword";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
 import LoadingScreen from "./components/ui/LoadingScreen";
 import Plasma from "./components/animations/Plasma";
@@ -37,9 +39,9 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster position="top-center" />
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
           {isLoading && (
-            <LoadingScreen onComplete={() => setIsLoading(false)} />
+            <LoadingScreen key="loading-screen" onComplete={() => setIsLoading(false)} />
           )}
         </AnimatePresence>
         
@@ -60,6 +62,8 @@ const App = () => {
                 <Route path="/post/:id" element={<PostDetail />} />
                 <Route path="/feed" element={<Feed />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/terms" element={<Terms />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

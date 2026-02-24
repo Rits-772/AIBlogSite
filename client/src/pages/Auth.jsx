@@ -228,7 +228,11 @@ const Auth = () => {
               className="group relative w-full overflow-hidden border border-primary bg-primary py-4 font-mono text-[10px] uppercase tracking-[0.25em] text-primary-foreground transition-all duration-500 hover:bg-transparent hover:text-primary disabled:opacity-50"
             >
               <span className="relative z-10 flex items-center justify-center gap-2">
-                {loading ? "Authenticating..." : 
+                {loading ? (
+                  mode === "login" ? "Authenticating..." : 
+                  mode === "signup" ? "Creating account..." : 
+                  "Sending reset link..."
+                ) : 
                  mode === "login" ? "Enter Workspace" : 
                  mode === "signup" ? "Begin Journey" : 
                  "Send Recovery Link"}

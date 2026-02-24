@@ -4,6 +4,14 @@ import { supabase } from "../integrations/supabase/client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import AnimatedList from "../components/animations/AnimatedList";
+import { 
+  FileText, CheckCircle, Eye, Heart, BarChart3, 
+  Settings, LogOut, LayoutDashboard, MessageSquare,
+  User
+} from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip as RechartsTooltip } from 'recharts';
+import ThemeToggle from "../components/ThemeToggle";
+import Header from "../components/layout/Header";
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -27,7 +35,7 @@ const Dashboard = () => {
   const fetchPosts = async (userId) => {
     const { data, error } = await supabase
       .from("posts")
-      .select("id, title, status, created_at, updated_at, is_ai_generated, views")
+      .select("id, title, status, created_at, updated_at, is_ai_generated, views, thumbnail_url")
       .eq("author_id", userId)
       .neq("status", "deleted")
       .order("updated_at", { ascending: false });
@@ -39,6 +47,26 @@ const Dashboard = () => {
     }
     setLoading(false);
   };
+
+  // Calculate Metrics
+  const metrics = {
+    totalPosts: posts.length,
+    published: posts.filter(p => p.status === 'published').length,
+    totalViews: posts.reduce((acc, p) => acc + (p.views || 0), 0),
+    totalLikes: posts.reduce((acc, p) => acc + (p.likes || 0), 0), // Assuming likes column exists or defaults to 0
+  };
+
+  // Prepare Tag Data for Chart
+  const tagData = posts.reduce((acc, post) => {
+    (post.tags || []).forEach(tag => {
+      const existing = acc.find(item => item.name === tag);
+      if (existing) existing.value += 1;
+      else acc.push({ name: tag, value: 1 });
+    });
+    return acc;
+  }, []).sort((a, b) => b.value - a.value).slice(0, 5);
+
+  const COLORS = ['#9b111e', '#e63946', '#f1faee', '#a8dadc', '#457b9d'];
 
   const handleDelete = async (postId) => {
     const { error } = await supabase
@@ -69,28 +97,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-atmosphere-deep transition-colors duration-500">
-      {/* Header */}
-      <header className="border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-50 transition-colors duration-500">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-12">
-          <Link to="/" className="font-display text-h3 text-foreground transition-all duration-300 hover:text-primary">
-            Midnight
-          </Link>
-          <div className="flex items-center gap-6">
-            <Link
-              to="/write"
-              className="border border-primary px-5 py-2 font-mono text-[10px] uppercase tracking-widest text-primary transition-all duration-300 hover:bg-primary hover:text-primary-foreground"
-            >
-              New Post
-            </Link>
-            <button
-              onClick={handleSignOut}
-              className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground transition-colors duration-300 hover:text-foreground"
-            >
-              Sign Out
-            </button>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* Content */}
       <motion.div 
@@ -99,9 +106,117 @@ const Dashboard = () => {
         transition={{ duration: 0.8 }}
         className="mx-auto max-w-7xl px-6 py-16 lg:px-12"
       >
-        <div className="mb-12">
-          <span className="font-mono text-[20px] uppercase tracking-[0.25em] text-primary">Dashboard</span>
-          <h1 className="mt-2 font-display text-[18px] text-foreground transition-colors duration-500">Your Posts</h1>
+        <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-primary">Overview</span>
+            <h1 className="mt-2 font-display text-h2 text-foreground transition-colors duration-500">Editorial Dashboard</h1>
+          </div>
+          <div className="flex items-center gap-4 border border-border/40 p-3 rounded-lg bg-card/10 backdrop-blur-sm">
+            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
+              <User className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="font-display text-sm text-foreground">{user?.email?.split('@')[0]}</p>
+              <p className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{user?.email}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+          {[
+            { label: "Total Posts", value: metrics.totalPosts, icon: FileText, color: "text-primary" },
+            { label: "Published", value: metrics.published, icon: CheckCircle, color: "text-teal" },
+            { label: "Total Views", value: metrics.totalViews, icon: Eye, color: "text-saffron" },
+            { label: "Estimated Likes", value: metrics.totalLikes, icon: Heart, color: "text-primary/60" }
+          ].map((stat, i) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className="p-6 border border-border/40 bg-card/10 backdrop-blur-sm hover:border-primary/20 transition-all rounded-xl group"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div className={`p-2 rounded-lg bg-card/50 border border-border/50 group-hover:border-primary/20 transition-all`}>
+                  <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                </div>
+              </div>
+              <p className="font-display text-h3 text-foreground mb-1">{stat.value}</p>
+              <p className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{stat.label}</p>
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
+          {/* Charts Section */}
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="lg:col-span-1 p-8 border border-border/40 bg-card/5 backdrop-blur-sm rounded-2xl"
+          >
+            <h2 className="font-display text-h4 text-foreground mb-8">Tag Insights</h2>
+            <div className="h-64 h-full w-full">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                <PieChart>
+                  <Pie
+                    data={tagData}
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {tagData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip 
+                    contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
+                    itemStyle={{ color: 'hsl(var(--foreground))', fontSize: '10px', textTransform: 'uppercase' }}
+                  />
+                  <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '10px' }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </motion.div>
+
+          {/* Activity/Top Posts */}
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="lg:col-span-2 p-8 border border-border/40 bg-card/5 backdrop-blur-sm rounded-2xl"
+          >
+            <h2 className="font-display text-h4 text-foreground mb-8">Top Performing Pieces</h2>
+            <div className="space-y-6">
+              {posts.slice(0, 4).map((post, i) => (
+                <div key={post.id} className="flex items-center gap-6 group">
+                  <div className="h-12 w-12 rounded border border-border/40 bg-card/20 flex items-center justify-center font-mono text-xs text-muted-foreground group-hover:border-primary/30 transition-all shrink-0">
+                    {String(i + 1).padStart(2, '0')}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-display text-sm text-foreground group-hover:text-primary transition-colors truncate">{post.title || "Untitled"}</h3>
+                    <div className="w-full h-1 bg-border/20 rounded-full mt-2 overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.min((post.views || 0) / (metrics.totalViews || 1) * 100, 100)}%` }}
+                        className="h-full bg-primary/40"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 font-mono text-[9px] text-muted-foreground shrink-0 uppercase tracking-widest">
+                    <span className="flex items-center gap-1.5"><Eye className="h-3 w-3" /> {post.views || 0}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+
+        <div className="mb-6">
+          <h2 className="font-display text-h3 text-foreground mb-2">Editorial Inventory</h2>
+          <p className="font-body text-sm text-muted-foreground mb-8">Manage and refine your pieces of literature.</p>
         </div>
 
         {posts.length === 0 ? (
