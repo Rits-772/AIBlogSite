@@ -1,10 +1,16 @@
+import { useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
+import Underline from '@tiptap/extension-underline';
+import TextAlign from '@tiptap/extension-text-align';
+import Highlight from '@tiptap/extension-highlight';
+import Typography from '@tiptap/extension-typography';
 import { 
   Bold, Italic, List, ListOrdered, Quote, Heading1, Heading2, 
-  Link as LinkIcon, Undo, Redo, Code 
+  Link as LinkIcon, Undo, Redo, Code, Underline as UnderlineIcon,
+  AlignCenter, AlignLeft, AlignRight, Highlighter
 } from 'lucide-react';
 
 const MenuBar = ({ editor }) => {
@@ -20,9 +26,14 @@ const MenuBar = ({ editor }) => {
   const buttons = [
     { icon: Bold, action: () => editor.chain().focus().toggleBold().run(), active: 'bold' },
     { icon: Italic, action: () => editor.chain().focus().toggleItalic().run(), active: 'italic' },
+    { icon: UnderlineIcon, action: () => editor.chain().focus().toggleUnderline().run(), active: 'underline' },
     { icon: Code, action: () => editor.chain().focus().toggleCode().run(), active: 'code' },
+    { icon: Highlighter, action: () => editor.chain().focus().toggleHighlight().run(), active: 'highlight' },
     { icon: Heading1, action: () => editor.chain().focus().toggleHeading({ level: 1 }).run(), active: { heading: { level: 1 } } },
     { icon: Heading2, action: () => editor.chain().focus().toggleHeading({ level: 2 }).run(), active: { heading: { level: 2 } } },
+    { icon: AlignLeft, action: () => editor.chain().focus().setTextAlign('left').run(), active: { textAlign: 'left' } },
+    { icon: AlignCenter, action: () => editor.chain().focus().setTextAlign('center').run(), active: { textAlign: 'center' } },
+    { icon: AlignRight, action: () => editor.chain().focus().setTextAlign('right').run(), active: { textAlign: 'right' } },
     { icon: List, action: () => editor.chain().focus().toggleBulletList().run(), active: 'bulletList' },
     { icon: ListOrdered, action: () => editor.chain().focus().toggleOrderedList().run(), active: 'orderedList' },
     { icon: Quote, action: () => editor.chain().focus().toggleBlockquote().run(), active: 'blockquote' },
@@ -55,6 +66,12 @@ const Editor = ({ content, onChange, placeholder = "Begin typing..." }) => {
   const editor = useEditor({
     extensions: [
       StarterKit,
+      Underline,
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+      }),
+      Highlight,
+      Typography,
       Link.configure({
         openOnClick: false,
       }),

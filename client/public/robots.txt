@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://midnight-typewriter.vercel.app/sitemap.xml

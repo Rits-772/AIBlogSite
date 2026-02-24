@@ -6,27 +6,47 @@ import Footer from "../components/layout/Footer";
 import { motion } from "framer-motion";
 import AnimatedList from "../components/animations/AnimatedList";
 import ClickSpark from "../components/animations/ClickSpark";
+import { Box } from "lucide-react";
+import { getFallbackImage } from "../utils/assets";
 
 const Feed = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const PAGE_SIZE = 12;
+
+  const fetchPosts = async (pageNum = 0) => {
+    if (pageNum === 0) setLoading(true);
+    else setLoadingMore(true);
+
+    const { data, error } = await supabase
+      .from("posts")
+      .select("id, title, content, category, tags, created_at, views, is_ai_generated, thumbnail_url, profiles:author_id(username)")
+      .eq("status", "published")
+      .order("created_at", { ascending: false })
+      .range(pageNum * PAGE_SIZE, (pageNum + 1) * PAGE_SIZE - 1);
+
+    if (!error && data) {
+      if (pageNum === 0) setPosts(data);
+      else setPosts(prev => [...prev, ...data]);
+      
+      if (data.length < PAGE_SIZE) setHasMore(false);
+    }
+    setLoading(false);
+    setLoadingMore(false);
+  };
 
   useEffect(() => {
-    const fetchPosts = async () => {
-      const { data, error } = await supabase
-        .from("posts")
-        .select("id, title, content, category, tags, created_at, views, is_ai_generated, profiles:author_id(username)")
-        .eq("status", "published")
-        .order("created_at", { ascending: false })
-        .limit(50);
-
-      if (!error && data) {
-        setPosts(data);
-      }
-      setLoading(false);
-    };
-    fetchPosts();
+    fetchPosts(0);
   }, []);
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchPosts(nextPage);
+  };
 
   const getExcerpt = (content, maxLen = 200) => {
     if (!content) return "";
@@ -95,10 +115,19 @@ const Feed = () => {
                     initial={{ opacity: 0, scale: 0.98, y: 20 }}
                     whileInView={{ opacity: 1, scale: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.6, delay: index * 0.05 }}
+                    transition={{ duration: 0.6, delay: (index % PAGE_SIZE) * 0.05 }}
                     className={containerClass}
                   >
                     <Link to={`/post/${post.id}`} className="block h-full flex flex-col">
+                      <div className="relative h-48 w-full mb-6 overflow-hidden rounded-lg border border-border/50 group-hover:border-primary/30 transition-all">
+                        <img 
+                          src={post.thumbnail_url || getFallbackImage(index)} 
+                          alt={post.title}
+                          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent opacity-60" />
+                      </div>
+                      
                       <div className="flex flex-col gap-4 mb-8">
                         <div className="flex items-center gap-3">
                           {post.category && (
@@ -121,7 +150,7 @@ const Feed = () => {
                             {post.title}
                           </h2>
                           <p className={`mt-4 font-body ${index === 0 ? 'text-body-lg' : 'text-body'} text-muted-foreground/70 leading-relaxed line-clamp-3`}>
-                            {getExcerpt(post.content, index === 0 ? 300 : Math.random() > 0.5 ? 150 : 100)}
+                            {getExcerpt(post.content, index === 0 ? 300 : index % 5 === 0 ? 150 : 100)}
                           </p>
                         </div>
                       </div>
@@ -138,6 +167,23 @@ const Feed = () => {
                   </motion.article>
                 );
               })}
+            </div>
+          )}
+
+          {hasMore && posts.length > 0 && (
+            <div className="mt-20 flex justify-center">
+              <button
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+                className="group flex flex-col items-center gap-4 focus:outline-none"
+              >
+                <div className="p-5 rounded-full border border-border/60 bg-card/10 group-hover:border-primary/40 group-hover:bg-primary/5 transition-all duration-500">
+                  <Box className={`h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors ${loadingMore ? 'animate-bounce' : ''}`} />
+                </div>
+                <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground group-hover:text-primary transition-colors">
+                  {loadingMore ? "Unfolding..." : "Load More"}
+                </span>
+              </button>
             </div>
           )}
         </div>

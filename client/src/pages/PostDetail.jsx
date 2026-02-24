@@ -1,22 +1,33 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "../integrations/supabase/client";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
+import { Sparkles, X } from "lucide-react";
+import axios from "axios";
+import { toast } from "sonner";
+import Comments from "../components/Comments";
+import { getFallbackImage } from "../utils/assets";
 
 const PostDetail = () => {
   const { id } = useParams();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
+  const [summary, setSummary] = useState("");
+  const [summarizing, setSummarizing] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
 
   useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+
     const fetchPost = async () => {
       if (!id) return;
 
       const { data, error } = await supabase
         .from("posts")
-        .select("id, title, content, category, tags, created_at, views, is_ai_generated, profiles:author_id(username)")
+        .select("id, title, content, category, tags, created_at, views, is_ai_generated, thumbnail_url, profiles:author_id(username)")
         .eq("id", id)
         .eq("status", "published")
         .single();
@@ -52,6 +63,27 @@ const PostDetail = () => {
 
   const authorName = post.profiles?.username || "Anonymous";
 
+  const handleSummarize = async () => {
+    if (summary) {
+      setShowSummary(true);
+      return;
+    }
+
+    setSummarizing(true);
+    try {
+      const response = await axios.post("http://localhost:5000/api/ai/summarize", {
+        content: post.content
+      });
+      setSummary(response.data.data);
+      setShowSummary(true);
+      toast.success("Summary generated");
+    } catch (error) {
+      toast.error("Failed to generate summary: " + (error.response?.data?.message || error.message));
+    } finally {
+      setSummarizing(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-atmosphere-deep transition-colors duration-500">
       <Header />
@@ -62,6 +94,16 @@ const PostDetail = () => {
           transition={{ duration: 0.8 }}
           className="mx-auto max-w-3xl px-6 py-20 lg:px-12"
         >
+          {/* Thumbnail */}
+          <div className="mb-12 rounded-2xl overflow-hidden border border-border/50 aspect-video relative group">
+            <img 
+              src={post.thumbnail_url || getFallbackImage(post.id)}
+              alt={post.title}
+              className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent" />
+          </div>
+
           {/* Meta */}
           <div className="mb-8 flex items-center gap-6">
             {post.category && (
@@ -83,11 +125,32 @@ const PostDetail = () => {
             by {authorName}
           </p>
 
-          {/* Content - Rendered as HTML for Tiptap support */}
-          <div 
-            className="prose prose-lg dark:prose-invert max-w-none font-body text-foreground leading-[1.8] transition-colors duration-500"
-            dangerouslySetInnerHTML={{ __html: post.content }}
-          />
+          {/* Content - Rendered as HTML for Tiptap support with Paywall logic */}
+          <div className="relative">
+            <div 
+              className={`prose prose-lg dark:prose-invert max-w-none font-body text-foreground leading-[1.8] transition-colors duration-500 ${!user ? 'max-h-[500px] overflow-hidden' : ''}`}
+              dangerouslySetInnerHTML={{ 
+                __html: !user 
+                  ? post.content.split(' ').slice(0, 250).join(' ') + '...' 
+                  : post.content 
+              }}
+            />
+            
+            {!user && (
+              <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-atmosphere-deep to-transparent flex flex-col items-center justify-end pb-8">
+                <div className="p-8 border border-primary/20 bg-card/60 backdrop-blur-md rounded-2xl text-center shadow-2xl max-w-md mx-auto">
+                  <h3 className="font-display text-h4 text-foreground mb-4">Continue Reading</h3>
+                  <p className="font-body text-sm text-muted-foreground mb-6">Join Midnight Typewriter to unlock the full narrative and participate in the dialogue.</p>
+                  <Link
+                    to="/auth"
+                    className="inline-block border border-primary bg-primary px-8 py-3 font-mono text-[10px] uppercase tracking-[0.2em] text-primary-foreground transition-all duration-500 hover:bg-transparent hover:text-primary"
+                  >
+                    Gain Access →
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Tags */}
           {post.tags && post.tags.length > 0 && (
@@ -97,8 +160,48 @@ const PostDetail = () => {
                   #{tag}
                 </span>
               ))}
+              
+              <button
+                onClick={handleSummarize}
+                disabled={summarizing}
+                className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-all group disabled:opacity-50"
+              >
+                <Sparkles className={`h-3 w-3 ${summarizing ? 'animate-spin' : 'text-primary group-hover:scale-110 transition-transform'}`} />
+                <span className="font-mono text-[10px] uppercase tracking-widest text-primary">
+                  {summarizing ? "Summarizing..." : "Summarize Post"}
+                </span>
+              </button>
             </div>
           )}
+
+          {/* AI Summary Panel */}
+          <AnimatePresence>
+            {showSummary && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="mt-8 border border-primary/20 bg-primary/5 rounded-lg overflow-hidden"
+              >
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-primary" />
+                      <span className="font-mono text-[11px] uppercase tracking-widest text-primary font-bold">AI Snapshot</span>
+                    </div>
+                    <button onClick={() => setShowSummary(false)} className="text-muted-foreground hover:text-foreground p-1">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <p className="font-body text-body-lg text-foreground/90 italic leading-relaxed">
+                    {summary}
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <Comments postId={id} postContent={post.content} />
         </motion.article>
       </main>
       <Footer />
