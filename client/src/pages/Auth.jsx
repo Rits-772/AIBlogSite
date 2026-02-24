@@ -81,7 +81,7 @@ const Auth = () => {
         </div>
         
         <div className="relative z-10 flex items-center gap-4">
-          <span className="font-display text-h3 tracking-tighter text-foreground">
+          <span className="font-display text-[24px] tracking-tighter text-foreground">
             Midnight
           </span>
           <div className="h-4 w-px bg-primary/40" />
@@ -99,11 +99,11 @@ const Auth = () => {
           >
             "The most meaningful work often happens in the <span className="text-primary italic">pauses</span>."
           </motion.p>
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1, delay: 0.6 }}
-            className="mt-8 flex items-center gap-3"
+            className="mt-4 flex items-center gap-3"
           >
             <div className="h-px w-8 bg-primary/40" />
             <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -246,16 +246,16 @@ const Auth = () => {
               <div className="h-px flex-1 bg-border" />
             </div>
 
-            <div className="flex flex-col items-center gap-3 pt-4 text-[12px]">
+            <div className="flex flex-col items-center gap-3 pt-4 text-[12px] overflow-hidden">
               {mode === "login" ? (
                 <>
-                  <button 
-                    onClick={() => handleModeChange("signup")} 
+                  <button
+                    onClick={() => handleModeChange("signup")}
                     className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
                   >
                     Create an account
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleModeChange("forgot-password")}
                     className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60 hover:text-primary transition-colors"
                   >
@@ -263,8 +263,8 @@ const Auth = () => {
                   </button>
                 </>
               ) : (
-                <button 
-                  onClick={() => handleModeChange("login")} 
+                <button
+                  onClick={() => handleModeChange("login")}
                   className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Return to Sign In

@@ -84,7 +84,7 @@ const EditorialFeed = () => {
                 whileInView={{ opacity: 1, scale: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
-                className={`${containerClass} m-0`}
+                className={`${containerClass} m-0 overflow-hidden ${index === 0 ? 'rounded-[15px]' : 'rounded-[10px]'}`}
               >
                 <div className="flex flex-col gap-0 mb-8">
                   <div className="flex items-center gap-3">

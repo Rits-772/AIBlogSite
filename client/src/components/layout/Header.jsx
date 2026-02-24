@@ -34,7 +34,7 @@ const Header = () => {
         </Link>
 
         {/* Nav */}
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav className="hidden items-center gap-8 md:flex text-[14px]">
           <Link
             to="/#about"
             onClick={(e) => {
@@ -69,7 +69,7 @@ const Header = () => {
               </Link>
               <Link
                 to="/dashboard"
-                className="border border-primary px-5 py-2 font-mono text-xs uppercase tracking-widest text-primary transition-all duration-300 hover:bg-primary hover:text-primary-foreground"
+                className="border border-primary px-5 py-2 font-mono text-xs uppercase tracking-widest text-primary transition-all duration-300 hover:bg-primary hover:text-primary-foreground rounded-[15px] overflow-hidden"
               >
                 Dashboard
               </Link>
@@ -77,7 +77,7 @@ const Header = () => {
           ) : (
             <Link
               to="/auth"
-              className="relative border border-primary/40 px-6 py-2.5 font-mono text-[10px] uppercase tracking-[0.25em] text-primary transition-all duration-500 hover:bg-primary hover:text-primary-foreground active:scale-95"
+              className="relative border border-primary/40 px-6 py-2.5 font-mono text-[12px] uppercase tracking-[0.25em] text-primary transition-all duration-500 hover:bg-primary hover:text-primary-foreground active:scale-95 rounded-[25px] overflow-hidden"
             >
               Sign In
             </Link>

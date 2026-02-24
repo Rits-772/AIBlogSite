@@ -51,7 +51,7 @@ const Hero = () => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
-            className="font-display text-foreground leading-[0.9] -mt-1 mb-8 flex flex-wrap items-stretch gap-2 sm:gap-4 text-[29px] sm:text-h1 lg:text-[4rem] pt-10 pb-0"
+            className="font-display text-foreground leading-[0.9] mt-0 mb-8 flex flex-wrap items-stretch gap-2 sm:gap-4 text-[29px] sm:text-h1 lg:text-[4rem] pt-10 pb-0"
           >
             Write with <span className="italic text-primary font-semibold">intention.</span>
           </motion.h1>
@@ -64,7 +64,7 @@ const Hero = () => {
           transition={{ duration: 0.8, delay: 0.6 }}
           className="mt-8 max-w-2xl"
         >
-          <p className="font-body text-body-lg text-muted-foreground/80 leading-relaxed text-left m-0 p-0">
+          <p className="font-body text-body-lg text-muted-foreground/80 leading-relaxed text-left m-0 p-0 -mt-[60px]">
             A publishing platform that rejects the generic. Where typography carries identity, AI enhances without overtaking, and every word finds its atmosphere.
           </p>
         </motion.div>
@@ -76,10 +76,10 @@ const Hero = () => {
           transition={{ duration: 0.8, delay: 0.8 }}
           className="mt-12 flex flex-wrap items-stretch gap-8 text-[11px]"
         >
-          <Link to="/auth" className="group relative border border-primary bg-primary/90 px-10 py-4 font-mono text-[14px] uppercase tracking-[0.25em] text-primary-foreground transition-all duration-500 hover:bg-transparent hover:text-primary">
+          <Link to="/auth" className="group relative border border-primary bg-primary/90 px-10 py-4 font-mono text-[14px] uppercase tracking-[0.25em] text-primary-foreground transition-all duration-500 hover:bg-transparent hover:text-primary rounded-[10px] overflow-hidden">
             Begin Writing
           </Link>
-          <Link to="/feed" className="font-mono text-[16px] uppercase tracking-[0.25em] text-muted-foreground transition-all duration-300 hover:text-primary hover:tracking-[0.3em] pt-[15px] pb-[15px]">
+          <Link to="/feed" className="font-mono text-[16px] uppercase tracking-[0.25em] text-muted-foreground transition-all duration-300 hover:text-primary hover:tracking-[0.3em] pt-[15px] pb-[15px] pl-10 pr-10 border border-[rgba(88,93,107,1)] rounded-[10px] overflow-hidden">
             Explore Feed →
           </Link>
         </motion.div>
