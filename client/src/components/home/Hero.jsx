@@ -28,7 +28,7 @@ const Hero = () => {
         >
           <div className="flex items-center gap-4">
             <div className="h-[1px] w-12 bg-primary/40" />
-            <span className="font-mono text-[15px] uppercase tracking-[0.5em] text-primary/80 italic m-0 p-0">
+            <span className="font-mono text-[12px] uppercase tracking-[0.4em] text-primary/80 italic m-0 p-0">
               AI-Assisted Editorial Publishing
             </span>
           </div>
@@ -74,12 +74,12 @@ const Hero = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.8 }}
-          className="mt-12 flex flex-wrap items-stretch gap-8 text-[11px]"
+          className="mt-12 flex flex-wrap items-stretch gap-6"
         >
-          <Link to="/auth" className="group relative border border-primary bg-primary/90 px-10 py-4 font-mono text-[14px] uppercase tracking-[0.25em] text-primary-foreground transition-all duration-500 hover:bg-transparent hover:text-primary rounded-[10px] overflow-hidden">
+          <Link to="/auth" className="group relative border border-primary bg-primary/90 px-8 py-4 font-mono text-[12px] uppercase tracking-[0.25em] text-primary-foreground transition-all duration-500 hover:bg-transparent hover:text-primary rounded-[25px] overflow-hidden">
             Begin Writing
           </Link>
-          <Link to="/feed" className="font-mono text-[16px] uppercase tracking-[0.25em] text-muted-foreground transition-all duration-300 hover:text-primary hover:tracking-[0.3em] pt-[15px] pb-[15px] pl-10 pr-10 border border-[rgba(88,93,107,1)] rounded-[10px] overflow-hidden">
+          <Link to="/feed" className="font-mono text-[12px] uppercase tracking-[0.25em] text-muted-foreground transition-all duration-300 hover:text-primary hover:tracking-[0.3em] px-8 py-4 border border-border rounded-[25px] overflow-hidden">
             Explore Feed →
           </Link>
         </motion.div>
@@ -92,7 +92,7 @@ const Hero = () => {
           className="mt-20 flex items-center gap-3"
         >
           <div className="h-8 w-px bg-primary/30 subtle-pulse" />
-          <span className="font-mono text-xs text-muted-foreground tracking-widest text-[10px]">Read More</span>
+          <span className="font-mono text-[12px] uppercase text-muted-foreground tracking-[0.3em]">Read More</span>
         </motion.div>
       </div>
     </section>

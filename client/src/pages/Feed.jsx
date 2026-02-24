@@ -70,7 +70,7 @@ const Feed = () => {
           >
             <div className="flex items-center gap-3 mb-4">
               <div className="h-px w-8 bg-primary/40" />
-              <span className="font-mono text-[10px] uppercase tracking-[0.4em] text-primary/80">Public Feed</span>
+              <span className="font-mono text-[12px] uppercase tracking-[0.4em] text-primary/80">Public Feed</span>
             </div>
             <h1 className="font-display text-hero text-foreground tracking-tighter transition-colors duration-500">The Latest</h1>
             <p className="mt-6 max-w-xl font-body text-body-lg text-muted-foreground/80 leading-relaxed">
@@ -131,12 +131,12 @@ const Feed = () => {
                       <div className="flex flex-col gap-4 mb-8">
                         <div className="flex items-center gap-3">
                           {post.category && (
-                            <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
+                            <span className="font-mono text-[12px] uppercase tracking-[0.3em] text-primary">
                               {post.category}
                             </span>
                           )}
                           {(post.category) && <div className="h-px w-4 bg-border" />}
-                          <span className="font-mono text-[9px] text-muted-foreground/60 uppercase tracking-widest">
+                          <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
                             {new Date(post.created_at).toLocaleDateString("en-US", {
                               month: "short",
                               day: "numeric",
@@ -159,7 +159,7 @@ const Feed = () => {
                         <span className="font-body text-small italic text-muted-foreground/80">
                           by {authorName}
                         </span>
-                        <span className="font-mono text-[9px] uppercase tracking-widest text-primary/0 transition-all duration-300 group-hover:text-primary">
+                        <span className="font-mono text-[11px] uppercase tracking-widest text-primary/0 transition-all duration-300 group-hover:text-primary">
                           Read →
                         </span>
                       </div>

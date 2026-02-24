@@ -44,11 +44,11 @@ const EditorialFeed = () => {
           >
             <div className="flex items-center gap-3 mb-2">
               <div className="h-px w-6 bg-primary/60" />
-              <span className="font-mono text-[15px] uppercase tracking-[0.4em] text-primary/80">
+              <span className="font-mono text-[12px] uppercase tracking-[0.4em] text-primary/80">
                 Latest
               </span>
             </div>
-            <h2 className="font-display text-[25px] text-foreground tracking-tight">
+            <h2 className="font-display text-[29px] sm:text-[35px] text-foreground tracking-tight">
               From the Feed
             </h2>
           </motion.div>
@@ -88,11 +88,11 @@ const EditorialFeed = () => {
               >
                 <div className="flex flex-col gap-0 mb-8">
                   <div className="flex items-center gap-3">
-                    <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary">
+                    <span className="font-mono text-[12px] uppercase tracking-[0.3em] text-primary">
                       {post.category}
                     </span>
                     <div className="h-px w-4 bg-border" />
-                    <span className="font-mono text-[9px] text-muted-foreground/60 uppercase tracking-widest">
+                    <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
                       {post.date}
                     </span>
                   </div>
@@ -111,7 +111,7 @@ const EditorialFeed = () => {
                   <span className="font-body text-small italic text-muted-foreground/80">
                     by {post.author}
                   </span>
-                  <span className="font-mono text-[9px] uppercase tracking-widest text-primary/0 transition-all duration-300 group-hover:text-primary">
+                  <span className="font-mono text-[11px] uppercase tracking-widest text-primary/0 transition-all duration-300 group-hover:text-primary">
                     Read →
                   </span>
                 </div>

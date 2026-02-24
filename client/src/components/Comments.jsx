@@ -5,6 +5,8 @@ import { MessageSquare, Send, Sparkles, User, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import axios from "axios";
 
+const API = import.meta.env.VITE_API_URL;
+
 const Comments = ({ postId, postContent }) => {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
@@ -57,7 +59,7 @@ const Comments = ({ postId, postContent }) => {
   const handleGenerateReply = async (commentContent) => {
     setGeneratingReply(true);
     try {
-      const response = await axios.post("http://localhost:5000/api/ai/reply", {
+      const response = await axios.post(`${API}/api/ai/reply`, {
         postContent,
         comment: commentContent
       });

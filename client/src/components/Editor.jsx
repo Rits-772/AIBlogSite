@@ -65,15 +65,22 @@ const MenuBar = ({ editor }) => {
 const Editor = ({ content, onChange, placeholder = "Begin typing..." }) => {
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        history: true,
+      }),
       Underline,
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
-      Highlight,
+      Highlight.configure({
+        multicolor: true,
+      }),
       Typography,
       Link.configure({
         openOnClick: false,
+        HTMLAttributes: {
+          class: 'text-primary underline underline-offset-4 cursor-pointer',
+        },
       }),
       Placeholder.configure({
         placeholder,

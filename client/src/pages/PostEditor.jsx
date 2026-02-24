@@ -12,6 +12,7 @@ import { Eye, FileText } from "lucide-react";
 
 const TONES = ["contemplative", "analytical", "conversational", "provocative", "lyrical"];
 const CATEGORIES = ["Essay", "Technology", "Design", "Philosophy", "Culture", "Personal"];
+const API = import.meta.env.VITE_API_URL;
 
 const PostEditor = () => {
   const { id } = useParams();
@@ -101,6 +102,9 @@ const PostEditor = () => {
     } else {
       toast.success(finalStatus === "published" ? "Published!" : "Draft saved");
       setStatus(finalStatus);
+      if (finalStatus === "published") {
+        navigate(`/post/${id || data?.id}`);
+      }
     }
     setSaving(false);
   };
@@ -110,7 +114,7 @@ const PostEditor = () => {
     setAiGenerating(true);
 
     try {
-      const response = await axios.post("http://localhost:5000/api/ai/generate", {
+      const response = await axios.post(`${API}/api/ai/generate`, {
         topic: aiTopic,
         tone: aiTone,
         wordCount: parseInt(aiWordCount),
@@ -144,7 +148,7 @@ const PostEditor = () => {
           <div className="flex items-center gap-3 sm:gap-6">
             <button
               onClick={() => setShowAI(!showAI)}
-              className={`font-mono text-[9px] uppercase tracking-[0.2em] transition-all duration-300 flex items-center gap-2 ${
+              className={`font-mono text-[11px] uppercase tracking-[0.2em] transition-all duration-300 flex items-center gap-2 ${
                 showAI ? "text-primary" : "text-muted-foreground hover:text-primary"
               }`}
             >
@@ -174,14 +178,14 @@ const PostEditor = () => {
             <button
               onClick={() => handleSave("draft")}
               disabled={saving}
-              className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground transition-all hover:text-foreground disabled:opacity-50 hidden md:block"
+              className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground transition-all hover:text-foreground disabled:opacity-50 hidden md:block"
             >
               Save Draft
             </button>
             <button
               onClick={() => handleSave("published")}
               disabled={saving}
-              className="relative overflow-hidden border border-primary bg-primary px-3 sm:px-6 py-2 sm:py-2.5 font-mono text-[9px] uppercase tracking-[0.2em] text-primary-foreground transition-all duration-500 hover:bg-transparent hover:text-primary disabled:opacity-50"
+              className="relative overflow-hidden border border-primary bg-primary px-3 sm:px-6 py-2 sm:py-2.5 font-mono text-[11px] uppercase tracking-[0.2em] text-primary-foreground transition-all duration-500 hover:bg-transparent hover:text-primary disabled:opacity-50 rounded-[25px]"
             >
               Publish
             </button>

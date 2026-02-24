@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import Comments from "../components/Comments";
 import { getFallbackImage } from "../utils/assets";
 
+const API = import.meta.env.VITE_API_URL;
+
 const PostDetail = () => {
   const { id } = useParams();
   const [post, setPost] = useState(null);
@@ -71,7 +73,7 @@ const PostDetail = () => {
 
     setSummarizing(true);
     try {
-      const response = await axios.post("http://localhost:5000/api/ai/summarize", {
+      const response = await axios.post(`${API}/api/ai/summarize`, {
         content: post.content
       });
       setSummary(response.data.data);
@@ -107,13 +109,13 @@ const PostDetail = () => {
           {/* Meta */}
           <div className="mb-8 flex items-center gap-6">
             {post.category && (
-              <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-primary">{post.category}</span>
+              <span className="font-mono text-[12px] uppercase tracking-[0.25em] text-primary">{post.category}</span>
             )}
-            <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
+            <span className="font-mono text-[12px] text-muted-foreground uppercase tracking-wider">
               {new Date(post.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
             </span>
             {post.is_ai_generated && (
-              <span className="font-mono text-[10px] uppercase tracking-widest text-primary/40">AI-assisted draft</span>
+              <span className="font-mono text-[12px] uppercase tracking-widest text-primary/40">AI-assisted draft</span>
             )}
           </div>
 
@@ -139,11 +141,11 @@ const PostDetail = () => {
             {!user && (
               <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-atmosphere-deep to-transparent flex flex-col items-center justify-end pb-8">
                 <div className="p-8 border border-primary/20 bg-card/60 backdrop-blur-md rounded-2xl text-center shadow-2xl max-w-md mx-auto">
-                  <h3 className="font-display text-h4 text-foreground mb-4">Continue Reading</h3>
+                  <h3 className="font-display text-[24px] text-foreground mb-4">Continue Reading</h3>
                   <p className="font-body text-sm text-muted-foreground mb-6">Join Midnight Typewriter to unlock the full narrative and participate in the dialogue.</p>
                   <Link
                     to="/auth"
-                    className="inline-block border border-primary bg-primary px-8 py-3 font-mono text-[10px] uppercase tracking-[0.2em] text-primary-foreground transition-all duration-500 hover:bg-transparent hover:text-primary"
+                    className="inline-block border border-primary bg-primary px-8 py-4 font-mono text-[12px] uppercase tracking-[0.2em] text-primary-foreground transition-all duration-500 hover:bg-transparent hover:text-primary rounded-[25px] overflow-hidden"
                   >
                     Gain Access →
                   </Link>
@@ -156,7 +158,7 @@ const PostDetail = () => {
           {post.tags && post.tags.length > 0 && (
             <div className="mt-16 pt-8 border-t border-border flex items-center gap-3 flex-wrap transition-colors duration-500">
               {post.tags.map((tag) => (
-                <span key={tag} className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground border border-border px-3 py-1 bg-card/30 transition-colors duration-500">
+                <span key={tag} className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground border border-border px-3 py-1 bg-card/30 transition-colors duration-500 rounded-[15px]">
                   #{tag}
                 </span>
               ))}
@@ -164,10 +166,10 @@ const PostDetail = () => {
               <button
                 onClick={handleSummarize}
                 disabled={summarizing}
-                className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-all group disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 rounded-[25px] border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-all group disabled:opacity-50"
               >
                 <Sparkles className={`h-3 w-3 ${summarizing ? 'animate-spin' : 'text-primary group-hover:scale-110 transition-transform'}`} />
-                <span className="font-mono text-[10px] uppercase tracking-widest text-primary">
+                <span className="font-mono text-[11px] uppercase tracking-widest text-primary">
                   {summarizing ? "Summarizing..." : "Summarize Post"}
                 </span>
               </button>

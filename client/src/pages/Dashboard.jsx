@@ -157,7 +157,7 @@ const Dashboard = () => {
             className="lg:col-span-1 p-8 border border-border/40 bg-card/5 backdrop-blur-sm rounded-2xl"
           >
             <h2 className="font-display text-h4 text-foreground mb-8">Tag Insights</h2>
-            <div className="h-64 h-full w-full">
+            <div className="h-[250px] w-full">
               <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <PieChart>
                   <Pie
@@ -233,7 +233,7 @@ const Dashboard = () => {
             </p>
             <Link
               to="/write"
-              className="inline-block border border-primary bg-primary px-10 py-4 font-mono text-[10px] uppercase tracking-[0.25em] text-primary-foreground transition-all duration-500 hover:bg-transparent hover:text-primary"
+              className="inline-block border border-primary bg-primary px-10 py-4 font-mono text-[12px] uppercase tracking-[0.25em] text-primary-foreground transition-all duration-500 hover:bg-transparent hover:text-primary rounded-[25px] overflow-hidden"
             >
               Enter Editor
             </Link>
@@ -268,11 +268,11 @@ const Dashboard = () => {
                 >
                   <div className="flex flex-col gap-4 mb-8">
                     <div className="flex items-center gap-3">
-                      <span className={`font-mono text-[10px] uppercase tracking-widest ${post.status === "published" ? "text-teal" : "text-muted-foreground"}`}>
+                      <span className={`font-mono text-[12px] uppercase tracking-[0.3em] ${post.status === "published" ? "text-teal" : "text-muted-foreground"}`}>
                         {post.status}
                       </span>
                       <div className="h-px w-4 bg-border" />
-                      <span className="font-mono text-[9px] text-muted-foreground/60 uppercase tracking-widest">
+                      <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
                         {new Date(post.updated_at).toLocaleDateString("en-US", {
                           month: "short",
                           day: "numeric",
@@ -301,13 +301,13 @@ const Dashboard = () => {
                     <div className="flex items-center gap-4">
                       <Link
                         to={`/write/${post.id}`}
-                        className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground transition-all duration-300 hover:text-foreground hover:tracking-[0.15em]"
+                        className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground transition-all duration-300 hover:text-foreground hover:tracking-[0.15em]"
                       >
                         Edit
                       </Link>
                       <button
                         onClick={() => handleDelete(post.id)}
-                        className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground transition-all duration-300 hover:text-destructive hover:tracking-[0.15em]"
+                        className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground transition-all duration-300 hover:text-destructive hover:tracking-[0.15em]"
                       >
                         Delete
                       </button>
