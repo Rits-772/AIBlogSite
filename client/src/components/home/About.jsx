@@ -61,7 +61,7 @@ const About = () => {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: i * 0.1 }}
-                className="border border-border p-10 bg-card/30 backdrop-blur-sm transition-all duration-500 hover:border-primary/30 group font-semibold"
+                className="border border-border p-10 bg-card/30 backdrop-blur-sm transition-all duration-500 hover:border-primary/30 group font-semibold rounded-[10px] overflow-hidden"
               >
                 <item.icon className="w-6 h-6 text-primary/60 mb-6 transition-transform duration-500 group-hover:scale-110" />
                 <h4 className="font-display text-h4 text-foreground mb-4">{item.title}</h4>

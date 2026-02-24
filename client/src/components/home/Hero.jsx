@@ -76,7 +76,7 @@ const Hero = () => {
           transition={{ duration: 0.8, delay: 0.8 }}
           className="mt-12 flex flex-wrap items-stretch gap-8 text-[11px]"
         >
-          <Link to="/auth" className="group relative border border-primary bg-primary/90 px-10 py-4 font-mono text-[14px] uppercase tracking-[0.25em] text-primary-foreground transition-all duration-500 hover:bg-transparent hover:text-primary">
+          <Link to="/auth" className="group relative border border-primary bg-primary/90 px-10 py-4 font-mono text-[14px] uppercase tracking-[0.25em] text-primary-foreground transition-all duration-500 hover:bg-transparent hover:text-primary rounded-[10px] overflow-hidden">
             Begin Writing
           </Link>
           <Link to="/feed" className="font-mono text-[16px] uppercase tracking-[0.25em] text-muted-foreground transition-all duration-300 hover:text-primary hover:tracking-[0.3em] pt-[15px] pb-[15px] pl-10 pr-10 border border-[rgba(88,93,107,1)] rounded-[10px] overflow-hidden">
