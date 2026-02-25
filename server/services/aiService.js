@@ -1,5 +1,5 @@
-const config = require('../config/env');
-const Groq = require('groq-sdk');
+import config from '../config/env.js';
+import Groq from 'groq-sdk';
 
 const groq = config.ai.apiKey ? new Groq({ apiKey: config.ai.apiKey }) : null;
 
@@ -158,4 +158,5 @@ const generateReply = async (postContent, userComment) => {
   }
 };
 
-module.exports = { generateBlogPost, summarizePost, generateReply };
+// module.exports removed, using named exports
+export { generateBlogPost, summarizePost, generateReply };

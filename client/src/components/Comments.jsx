@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
-import { supabase } from "../integrations/supabase/client";
+import { auth, posts, ai as aiApi, comments as commentsApi } from "../utils/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, Send, Sparkles, User, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import axios from "axios";
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -16,19 +15,19 @@ const Comments = ({ postId, postContent }) => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+    auth.getMe().then(({ user }) => setUser(user)).catch(() => setUser(null));
     fetchComments();
   }, [postId]);
 
   const fetchComments = async () => {
-    const { data, error } = await supabase
-      .from("comments")
-      .select("*, profiles:user_id(username, avatar_url)")
-      .eq("post_id", postId)
-      .order("created_at", { ascending: true });
-
-    if (!error) setComments(data || []);
-    setLoading(false);
+    try {
+      const data = await commentsApi.getByPost(postId);
+      setComments(data || []);
+    } catch (err) {
+      console.error("Fetch Comments Error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -40,30 +39,23 @@ const Comments = ({ postId, postContent }) => {
     if (!newComment.trim()) return;
 
     setSubmitting(true);
-    const { error } = await supabase.from("comments").insert({
-      post_id: postId,
-      user_id: user.id,
-      content: newComment.trim()
-    });
-
-    if (error) {
-      toast.error("Failed to post comment");
-    } else {
+    try {
+      await commentsApi.create(postId, newComment.trim());
       setNewComment("");
       fetchComments();
       toast.success("Comment posted");
+    } catch (err) {
+      toast.error("Failed to post comment");
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   };
 
   const handleGenerateReply = async (commentContent) => {
     setGeneratingReply(true);
     try {
-      const response = await axios.post(`${API}/api/ai/reply`, {
-        postContent,
-        comment: commentContent
-      });
-      setNewComment(response.data.data);
+      const response = await aiApi.reply(postContent, commentContent);
+      setNewComment(response.data);
       toast.success("AI draft generated");
     } catch (error) {
       toast.error("AI failed to draft reply");
@@ -73,10 +65,12 @@ const Comments = ({ postId, postContent }) => {
   };
 
   const handleDelete = async (commentId) => {
-    const { error } = await supabase.from("comments").delete().eq("id", commentId);
-    if (!error) {
-      setComments(prev => prev.filter(c => c.id !== commentId));
+    try {
+      await commentsApi.delete(commentId);
+      setComments(prev => prev.filter(c => c._id !== commentId));
       toast.success("Comment deleted");
+    } catch (err) {
+      toast.error("Failed to delete comment");
     }
   };
 
@@ -92,7 +86,7 @@ const Comments = ({ postId, postContent }) => {
         <AnimatePresence>
           {comments.map((comment) => (
             <motion.div
-              key={comment.id}
+              key={comment._id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className="group relative flex gap-4 p-4 rounded-lg bg-card/10 border border-border/40 hover:border-primary/20 transition-all"
@@ -102,9 +96,9 @@ const Comments = ({ postId, postContent }) => {
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-display text-sm text-foreground">{comment.profiles?.username || "Anonymous"}</span>
+                  <span className="font-display text-sm text-foreground">{comment.user?.name || "Anonymous"}</span>
                   <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-widest">
-                    {new Date(comment.created_at).toLocaleDateString()}
+                    {new Date(comment.createdAt).toLocaleDateString()}
                   </span>
                 </div>
                 <p className="font-body text-body text-muted-foreground/90 leading-relaxed">
@@ -118,9 +112,9 @@ const Comments = ({ postId, postContent }) => {
                   >
                     <Sparkles className="h-3 w-3" /> AI Reply
                   </button>
-                  {user?.id === comment.user_id && (
+                  {user?._id === comment.user?._id && (
                     <button 
-                      onClick={() => handleDelete(comment.id)}
+                      onClick={() => handleDelete(comment._id)}
                       className="flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-widest text-muted-foreground hover:text-destructive transition-all"
                     >
                       <Trash2 className="h-3 w-3" /> Delete

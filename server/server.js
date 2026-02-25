@@ -1,14 +1,14 @@
 import express, { json, urlencoded } from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
-import { nodeEnv, port } from './config/env';
-import errorHandler from './middleware/errorHandler';
-import { apiLimiter } from './middleware/rateLimiter';
+import { nodeEnv, port } from './config/env.js';
+import errorHandler from './middleware/errorHandler.js';
+import { apiLimiter } from './middleware/rateLimiter.js';
 
 // Route imports
-import authRoutes from './routes/authRoutes';
-import postRoutes from './routes/postRoutes';
-import aiRoutes from './routes/aiRoutes';
+import authRoutes from './routes/authRoutes.js';
+import postRoutes from './routes/postRoutes.js';
+import aiRoutes from './routes/aiRoutes.js';
 
 // Initialize Express
 const app = express();
@@ -21,7 +21,7 @@ app.set('trust proxy', 1);
 console.log('MONGO_URI =', process.env.MONGO_URI);
 
 // ensure DB connection happens on startup
-import connectDB from './config/db';
+import connectDB from './config/db.js';
 connectDB();
 // ---------------------
 // Global Middleware

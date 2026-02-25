@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "../integrations/supabase/client";
+import { auth, posts, ai as aiApi } from "../utils/api";
 import { toast } from "sonner";
 import Editor from "../components/Editor";
 import axios from "axios";
@@ -37,74 +37,67 @@ const PostEditor = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      try {
+        const { user } = await auth.getMe();
+        if (!user) {
+          navigate("/auth");
+          return;
+        }
+        if (isEditing) loadPost();
+      } catch (err) {
         navigate("/auth");
-        return;
       }
-      if (isEditing) loadPost();
     };
     checkAuth();
   }, [id, navigate, isEditing]);
 
   const loadPost = async () => {
     if (!id) return;
-    const { data, error } = await supabase
-      .from("posts")
-      .select("*")
-      .eq("id", id)
-      .single();
-
-    if (error || !data) {
+    try {
+      const { data } = await posts.getOne(id);
+      setTitle(data.title);
+      setContent(data.content || "");
+      setTags((data.tags || []).join(", "));
+      setCategory(data.category || "");
+      setThumbnailUrl(data.thumbnail_url || "");
+      setStatus(data.status);
+    } catch (err) {
       toast.error("Post not found");
       navigate("/dashboard");
-      return;
     }
-    setTitle(data.title);
-    setContent(data.content || "");
-    setTags((data.tags || []).join(", "));
-    setCategory(data.category || "");
-    setThumbnailUrl(data.thumbnail_url || "");
-    setStatus(data.status);
   };
 
   const handleSave = async (publishStatus) => {
-    setSaving(true);
-    const finalStatus = publishStatus || status;
+    try {
+      const postData = {
+        title: title || "Untitled",
+        content,
+        tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
+        category: category || "uncategorized",
+        thumbnail_url: thumbnailUrl || null,
+        status: finalStatus,
+      };
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const postData = {
-      title: title || "Untitled",
-      content,
-      tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
-      category: category || null,
-      thumbnail_url: thumbnailUrl || null,
-      status: finalStatus,
-      author_id: user.id,
-      updated_at: new Date().toISOString()
-    };
-
-    let error;
-    if (isEditing && id) {
-      ({ error } = await supabase.from("posts").update(postData).eq("id", id));
-    } else {
-      const { data, error: insertError } = await supabase.from("posts").insert(postData).select("id").single();
-      error = insertError;
-      if (data && !insertError) {
-        navigate(`/write/${data.id}`, { replace: true });
+      let response;
+      if (isEditing && id) {
+        response = await posts.update(id, postData);
+      } else {
+        response = await posts.create(postData);
+        if (response.data?._id) {
+          navigate(`/write/${response.data._id}`, { replace: true });
+        }
       }
-    }
 
-    if (error) {
-      toast.error("Error saving: " + error.message);
-    } else {
       toast.success(finalStatus === "published" ? "Published!" : "Draft saved");
       setStatus(finalStatus);
+      
       if (finalStatus === "published") {
-        navigate(`/post/${id || data?.id}`);
+        // Redirect to the slug-based URL
+        const slug = response.data?.slug || response.data?._id;
+        navigate(`/blog/${slug}`);
       }
+    } catch (err) {
+      toast.error("Error saving: " + (err.response?.data?.message || err.message));
     }
     setSaving(false);
   };
@@ -114,11 +107,11 @@ const PostEditor = () => {
     setAiGenerating(true);
 
     try {
-      const response = await axios.post(`${API}/api/ai/generate`, {
-        topic: aiTopic,
-        tone: aiTone,
-        wordCount: parseInt(aiWordCount),
-      });
+      const response = await aiApi.generate(
+        aiTopic,
+        aiTone,
+        parseInt(aiWordCount)
+      );
 
       const { title: aiTitle, content: aiContent, tags: aiTags, category: aiCategory } = response.data.data;
       

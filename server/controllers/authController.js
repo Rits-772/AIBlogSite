@@ -1,7 +1,7 @@
-const jwt = require('jsonwebtoken');
-const { validationResult } = require('express-validator');
-const User = require('../models/User');
-const config = require('../config/env');
+import jwt from 'jsonwebtoken';
+import { validationResult } from 'express-validator';
+import User from '../models/User.js';
+import config from '../config/env.js';
 
 /**
  * Generate JWT token
@@ -17,7 +17,7 @@ const generateToken = (id) => {
  * @route   POST /api/auth/register
  * @access  Public
  */
-const register = async (req, res, next) => {
+export const register = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -63,7 +63,7 @@ const register = async (req, res, next) => {
  * @route   POST /api/auth/login
  * @access  Public
  */
-const login = async (req, res, next) => {
+export const login = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -117,7 +117,7 @@ const login = async (req, res, next) => {
  * @route   GET /api/auth/me
  * @access  Private
  */
-const getMe = async (req, res, next) => {
+export const getMe = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
 
@@ -137,5 +137,3 @@ const getMe = async (req, res, next) => {
     next(error);
   }
 };
-
-module.exports = { register, login, getMe };

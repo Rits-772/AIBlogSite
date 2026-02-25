@@ -1,12 +1,12 @@
-const { validationResult } = require('express-validator');
-const Post = require('../models/Post');
+import { validationResult } from 'express-validator';
+import Post from '../models/Post.js';
 
 /**
  * @desc    Get all published posts (public feed)
  * @route   GET /api/posts
  * @access  Public
  */
-const getPosts = async (req, res, next) => {
+export const getPosts = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
@@ -51,12 +51,18 @@ const getPosts = async (req, res, next) => {
  * @route   GET /api/posts/:id
  * @access  Public
  */
-const getPost = async (req, res, next) => {
+export const getPost = async (req, res, next) => {
   try {
-    const post = await Post.findById(req.params.id).populate(
-      'author',
-      'name avatar'
-    );
+    const { id } = req.params;
+    let post;
+
+    // Check if ID is a valid MongoDB ObjectId
+    if (id.match(/^[0-9a-fA-F]{24}$/)) {
+      post = await Post.findById(id).populate('author', 'name avatar');
+    } else {
+      // Otherwise, assume it's a slug
+      post = await Post.findOne({ slug: id }).populate('author', 'name avatar');
+    }
 
     if (!post) {
       return res.status(404).json({
@@ -83,7 +89,7 @@ const getPost = async (req, res, next) => {
  * @route   POST /api/posts
  * @access  Private
  */
-const createPost = async (req, res, next) => {
+export const createPost = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -121,7 +127,7 @@ const createPost = async (req, res, next) => {
  * @route   PUT /api/posts/:id
  * @access  Private (owner only)
  */
-const updatePost = async (req, res, next) => {
+export const updatePost = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -174,7 +180,7 @@ const updatePost = async (req, res, next) => {
  * @route   DELETE /api/posts/:id
  * @access  Private (owner only)
  */
-const deletePost = async (req, res, next) => {
+export const deletePost = async (req, res, next) => {
   try {
     const post = await Post.findById(req.params.id);
 
@@ -210,7 +216,7 @@ const deletePost = async (req, res, next) => {
  * @route   GET /api/posts/my
  * @access  Private
  */
-const getMyPosts = async (req, res, next) => {
+export const getMyPosts = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
@@ -243,11 +249,4 @@ const getMyPosts = async (req, res, next) => {
   }
 };
 
-module.exports = {
-  getPosts,
-  getPost,
-  createPost,
-  updatePost,
-  deletePost,
-  getMyPosts,
-};
+// module.exports removed, using named exports

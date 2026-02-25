@@ -1,14 +1,14 @@
-const express = require('express');
-const { body } = require('express-validator');
-const {
+import express from 'express';
+import { body } from 'express-validator';
+import {
   getPosts,
   getPost,
   createPost,
   updatePost,
   deletePost,
   getMyPosts,
-} = require('../controllers/postController');
-const { protect } = require('../middleware/authMiddleware');
+} from '../controllers/postController.js';
+import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -61,4 +61,4 @@ router.put(
 
 router.delete('/:id', protect, deletePost);
 
-module.exports = router;
+export default router;

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const postSchema = new mongoose.Schema(
   {
@@ -7,6 +7,11 @@ const postSchema = new mongoose.Schema(
       required: [true, 'Title is required'],
       trim: true,
       maxlength: [200, 'Title cannot exceed 200 characters'],
+    },
+    slug: {
+      type: String,
+      unique: true,
+      lowercase: true,
     },
     content: {
       type: String,
@@ -45,12 +50,26 @@ const postSchema = new mongoose.Schema(
   }
 );
 
+// Slugify title before saving
+postSchema.pre('save', function (next) {
+  if (this.isModified('title')) {
+    this.slug = this.title
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, '') // remove special characters
+      .trim()
+      .replace(/\s+/g, '-') // replace spaces with -
+      .replace(/-+/g, '-'); // replace multiple - with single -
+  }
+  next();
+});
+
 // Indexes for efficient querying
 postSchema.index({ author: 1 });
 postSchema.index({ status: 1 });
 postSchema.index({ createdAt: -1 });
 postSchema.index({ tags: 1 });
 postSchema.index({ isDeleted: 1, status: 1 });
+postSchema.index({ slug: 1 });
 
 // Exclude soft-deleted posts by default
 postSchema.pre(/^find/, function (next) {
@@ -61,4 +80,4 @@ postSchema.pre(/^find/, function (next) {
   next();
 });
 
-module.exports = mongoose.model('Post', postSchema);
+export default mongoose.model('Post', postSchema);

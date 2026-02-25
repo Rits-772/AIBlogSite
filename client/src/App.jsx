@@ -60,6 +60,7 @@ const App = () => {
                 <Route path="/write" element={<PostEditor />} />
                 <Route path="/write/:id" element={<PostEditor />} />
                 <Route path="/post/:id" element={<PostDetail />} />
+                <Route path="/blog/:slug" element={<PostDetail />} />
                 <Route path="/feed" element={<Feed />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/privacy" element={<Privacy />} />

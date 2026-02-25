@@ -1,11 +1,11 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
-const config = require('../config/env');
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
+import config from '../config/env.js';
 
 /**
  * Protect routes — require valid JWT
  */
-const protect = async (req, res, next) => {
+export const protect = async (req, res, next) => {
   let token;
 
   // Check Authorization header
@@ -50,7 +50,7 @@ const protect = async (req, res, next) => {
 /**
  * Restrict to specific roles
  */
-const authorize = (...roles) => {
+export const authorize = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({
@@ -62,4 +62,4 @@ const authorize = (...roles) => {
   };
 };
 
-module.exports = { protect, authorize };
+// module.exports removed, using exports

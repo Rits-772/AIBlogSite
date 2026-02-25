@@ -1,19 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { supabase } from "../integrations/supabase/client";
-import { motion, AnimatePresence } from "framer-motion";
-import Header from "../components/layout/Header";
-import Footer from "../components/layout/Footer";
-import { Sparkles, X } from "lucide-react";
-import axios from "axios";
-import { toast } from "sonner";
-import Comments from "../components/Comments";
-import { getFallbackImage } from "../utils/assets";
+import { auth, posts, ai as aiApi } from "../utils/api";
 
 const API = import.meta.env.VITE_API_URL;
 
 const PostDetail = () => {
-  const { id } = useParams();
+  const { id, slug } = useParams();
+  const identifier = id || slug;
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
@@ -22,27 +15,22 @@ const PostDetail = () => {
   const [showSummary, setShowSummary] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+    auth.getMe().then(({ user }) => setUser(user)).catch(() => setUser(null));
 
     const fetchPost = async () => {
-      if (!id) return;
+      if (!identifier) return;
 
-      const { data, error } = await supabase
-        .from("posts")
-        .select("id, title, content, category, tags, created_at, views, is_ai_generated, thumbnail_url, profiles:author_id(username)")
-        .eq("id", id)
-        .eq("status", "published")
-        .single();
-
-      if (!error && data) {
+      try {
+        const { data } = await posts.getOne(identifier);
         setPost(data);
-        // Track view (simple increment)
-        await supabase.rpc('increment_views', { post_id: id });
+      } catch (err) {
+        console.error("Fetch Error:", err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchPost();
-  }, [id]);
+  }, [identifier]);
 
   if (loading) {
     return (
@@ -63,7 +51,7 @@ const PostDetail = () => {
     );
   }
 
-  const authorName = post.profiles?.username || "Anonymous";
+  const authorName = post.author?.name || "Anonymous";
 
   const handleSummarize = async () => {
     if (summary) {
@@ -73,10 +61,8 @@ const PostDetail = () => {
 
     setSummarizing(true);
     try {
-      const response = await axios.post(`${API}/api/ai/summarize`, {
-        content: post.content
-      });
-      setSummary(response.data.data);
+      const response = await aiApi.summarize(post.content);
+      setSummary(response.data);
       setShowSummary(true);
       toast.success("Summary generated");
     } catch (error) {
@@ -99,7 +85,7 @@ const PostDetail = () => {
           {/* Thumbnail */}
           <div className="mb-12 rounded-2xl overflow-hidden border border-border/50 aspect-video relative group">
             <img 
-              src={post.thumbnail_url || getFallbackImage(post.id)}
+              src={post.thumbnail_url || getFallbackImage(post._id)}
               alt={post.title}
               className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
             />
@@ -112,7 +98,7 @@ const PostDetail = () => {
               <span className="font-mono text-[12px] uppercase tracking-[0.25em] text-primary">{post.category}</span>
             )}
             <span className="font-mono text-[12px] text-muted-foreground uppercase tracking-wider">
-              {new Date(post.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+              {new Date(post.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
             </span>
             {post.is_ai_generated && (
               <span className="font-mono text-[12px] uppercase tracking-widest text-primary/40">AI-assisted draft</span>
@@ -203,7 +189,7 @@ const PostDetail = () => {
             )}
           </AnimatePresence>
 
-          <Comments postId={id} postContent={post.content} />
+          <Comments postId={post._id} postContent={post.content} />
         </motion.article>
       </main>
       <Footer />

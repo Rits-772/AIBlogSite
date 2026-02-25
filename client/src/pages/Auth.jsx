@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "../integrations/supabase/client";
+import { auth } from "../utils/api";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -26,29 +26,20 @@ const Auth = () => {
   };
 
   const handleLogin = async () => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    await auth.login(email, password);
     navigate("/dashboard");
   };
 
   const handleSignUp = async () => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { username } }
-    });
-    if (error) throw error;
-    toast.info("Account created successfully. Check your email to verify.");
+    // Backend expects 'name'
+    await auth.register(username, email, password);
+    toast.success("Account created successfully. Please sign in.");
     setMode("login");
   };
 
   const handleForgotPassword = async () => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    if (error) throw error;
-    toast.success("Password reset link sent to your email.");
-    setMode("login");
+    // Supabase specific, will need backend implementation if needed
+    toast.error("Forgot password is not yet supported in the custom backend.");
   };
 
   const handleSubmit = async (e) => {

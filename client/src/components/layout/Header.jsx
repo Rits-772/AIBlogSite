@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { supabase } from "../../integrations/supabase/client";
+import { auth } from "../../utils/api";
 import ThemeToggle from "../ThemeToggle";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ChevronRight } from "lucide-react";
@@ -11,16 +11,16 @@ const Header = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsLoggedIn(!!session);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsLoggedIn(!!session);
-    });
-    return () => {
-      if (subscription) subscription.unsubscribe();
+    const checkSession = async () => {
+      try {
+        const { user } = await auth.getMe();
+        setIsLoggedIn(!!user);
+      } catch (err) {
+        setIsLoggedIn(false);
+      }
     };
-  }, []);
+    checkSession();
+  }, [window.location.pathname]); // Re-check on navigation
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
@@ -72,13 +72,14 @@ const Header = () => {
               </Link>
               <Link
                 to="/dashboard"
-                className="border border-primary px-5 py-2 font-mono text-xs uppercase tracking-widest text-primary transition-all duration-300 hover:bg-primary hover:text-primary-foreground rounded-[15px] overflow-hidden"
+                className="font-mono text-small uppercase tracking-widest text-muted-foreground transition-all duration-300 hover:text-primary hover:tracking-[0.15em]"
               >
                 Dashboard
               </Link>
               <button
-                onClick={async () => {
-                  await supabase.auth.signOut();
+                onClick={() => {
+                  auth.logout();
+                  setIsLoggedIn(false);
                   navigate("/");
                 }}
                 className="font-mono text-small uppercase tracking-widest text-muted-foreground transition-all duration-300 hover:text-foreground"
@@ -174,8 +175,9 @@ const Header = () => {
                     <ChevronRight size={20} className="text-primary/40" />
                   </Link>
                   <button
-                    onClick={async () => {
-                      await supabase.auth.signOut();
+                    onClick={() => {
+                      auth.logout();
+                      setIsLoggedIn(false);
                       setIsMobileMenuOpen(false);
                       navigate("/");
                     }}

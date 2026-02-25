@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "../integrations/supabase/client";
+import { auth, posts as postsApi } from "../utils/api";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import AnimatedList from "../components/animations/AnimatedList";
@@ -21,31 +21,30 @@ const Dashboard = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      try {
+        const { user } = await auth.getMe();
+        if (!user) {
+          navigate("/auth");
+          return;
+        }
+        setUser(user);
+        fetchPosts();
+      } catch (err) {
         navigate("/auth");
-        return;
       }
-      setUser(user);
-      fetchPosts(user.id);
     };
     checkAuth();
   }, [navigate]);
 
-  const fetchPosts = async (userId) => {
-    const { data, error } = await supabase
-      .from("posts")
-      .select("id, title, status, created_at, updated_at, is_ai_generated, views, thumbnail_url")
-      .eq("author_id", userId)
-      .neq("status", "deleted")
-      .order("updated_at", { ascending: false });
-
-    if (error) {
-      toast.error("Error loading posts: " + error.message);
-    } else {
+  const fetchPosts = async () => {
+    try {
+      const { data } = await postsApi.getMyPosts();
       setPosts(data || []);
+    } catch (err) {
+      toast.error("Error loading posts: " + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   // Calculate Metrics
@@ -69,21 +68,17 @@ const Dashboard = () => {
   const COLORS = ['#9b111e', '#e63946', '#f1faee', '#a8dadc', '#457b9d'];
 
   const handleDelete = async (postId) => {
-    const { error } = await supabase
-      .from("posts")
-      .update({ status: "deleted" })
-      .eq("id", postId);
-
-    if (error) {
-      toast.error("Error deleting post: " + error.message);
-    } else {
-      setPosts((prev) => prev.filter((p) => p.id !== postId));
+    try {
+      await postsApi.delete(postId);
+      setPosts((prev) => prev.filter((p) => p._id !== postId));
       toast.success("Post deleted");
+    } catch (err) {
+      toast.error("Error deleting post: " + (err.response?.data?.message || err.message));
     }
   };
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
+  const handleSignOut = () => {
+    auth.logout();
     navigate("/");
   };
 
@@ -116,7 +111,7 @@ const Dashboard = () => {
               <User className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="font-display text-sm text-foreground">{user?.email?.split('@')[0]}</p>
+              <p className="font-display text-sm text-foreground">{user?.name || user?.email?.split('@')[0]}</p>
               <p className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{user?.email}</p>
             </div>
           </div>
@@ -191,7 +186,7 @@ const Dashboard = () => {
             <h2 className="font-display text-h4 text-foreground mb-8">Top Performing Pieces</h2>
             <div className="space-y-6">
               {posts.slice(0, 4).map((post, i) => (
-                <div key={post.id} className="flex items-center gap-6 group">
+                <div key={post._id} className="flex items-center gap-6 group">
                   <div className="h-12 w-12 rounded border border-border/40 bg-card/20 flex items-center justify-center font-mono text-xs text-muted-foreground group-hover:border-primary/30 transition-all shrink-0">
                     {String(i + 1).padStart(2, '0')}
                   </div>
@@ -259,7 +254,7 @@ const Dashboard = () => {
 
               return (
                 <motion.article 
-                  key={post.id} 
+                  key={post._id} 
                   initial={{ opacity: 0, scale: 0.98, y: 20 }}
                   whileInView={{ opacity: 1, scale: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -273,7 +268,7 @@ const Dashboard = () => {
                       </span>
                       <div className="h-px w-4 bg-border" />
                       <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
-                        {new Date(post.updated_at).toLocaleDateString("en-US", {
+                        {new Date(post.updatedAt).toLocaleDateString("en-US", {
                           month: "short",
                           day: "numeric",
                           year: "numeric",
@@ -287,7 +282,7 @@ const Dashboard = () => {
                       )}
                     </div>
 
-                    <Link to={`/write/${post.id}`} className="block mt-2">
+                    <Link to={`/write/${post._id}`} className="block mt-2">
                       <h2 className={`${index === 0 ? 'text-h2' : 'text-h3'} font-display text-foreground transition-colors duration-500 group-hover:text-primary leading-tight tracking-tight`}>
                         {post.title || "Untitled Draft"}
                       </h2>
@@ -300,13 +295,13 @@ const Dashboard = () => {
                     </span>
                     <div className="flex items-center gap-4">
                       <Link
-                        to={`/write/${post.id}`}
+                        to={`/write/${post._id}`}
                         className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground transition-all duration-300 hover:text-foreground hover:tracking-[0.15em]"
                       >
                         Edit
                       </Link>
                       <button
-                        onClick={() => handleDelete(post.id)}
+                        onClick={() => handleDelete(post._id)}
                         className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground transition-all duration-300 hover:text-destructive hover:tracking-[0.15em]"
                       >
                         Delete

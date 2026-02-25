@@ -1,5 +1,5 @@
-const { validationResult } = require('express-validator');
-const aiService = require('../services/aiService');
+import { validationResult } from 'express-validator';
+import * as aiService from '../services/aiService.js';
 
 /**
  * @desc    Generate AI blog post draft
@@ -67,4 +67,5 @@ const generateReply = async (req, res, next) => {
   }
 };
 
-module.exports = { generatePost, summarizePost, generateReply };
+// module.exports removed, using named exports
+export { generatePost, summarizePost, generateReply };

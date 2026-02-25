@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "../integrations/supabase/client";
+import { posts as postsApi } from "../utils/api";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import { motion } from "framer-motion";
@@ -17,29 +17,33 @@ const Feed = () => {
   const [hasMore, setHasMore] = useState(true);
   const PAGE_SIZE = 12;
 
-  const fetchPosts = async (pageNum = 0) => {
-    if (pageNum === 0) setLoading(true);
+  const fetchPosts = async (pageNum = 1) => {
+    if (pageNum === 1) setLoading(true);
     else setLoadingMore(true);
 
-    const { data, error } = await supabase
-      .from("posts")
-      .select("id, title, content, category, tags, created_at, views, is_ai_generated, thumbnail_url, profiles:author_id(username)")
-      .eq("status", "published")
-      .order("created_at", { ascending: false })
-      .range(pageNum * PAGE_SIZE, (pageNum + 1) * PAGE_SIZE - 1);
+    try {
+      const response = await postsApi.getAll({
+        page: pageNum,
+        limit: PAGE_SIZE,
+      });
 
-    if (!error && data) {
-      if (pageNum === 0) setPosts(data);
+      const { data, total, pages } = response;
+      
+      if (pageNum === 1) setPosts(data);
       else setPosts(prev => [...prev, ...data]);
       
-      if (data.length < PAGE_SIZE) setHasMore(false);
+      if (pageNum >= pages) setHasMore(false);
+    } catch (err) {
+      console.error("Error fetching feed:", err);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
     }
-    setLoading(false);
-    setLoadingMore(false);
   };
 
   useEffect(() => {
-    fetchPosts(0);
+    fetchPosts(1);
+    setPage(1);
   }, []);
 
   const handleLoadMore = () => {
@@ -91,7 +95,7 @@ const Feed = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-min">
               {posts.map((post, index) => {
-                const authorName = post.profiles?.username || "Anonymous";
+                const authorName = post.author?.name || "Anonymous";
                 
                 // Determine styling based on index to create a bento effect
                 let containerClass = "p-8 border border-border bg-card/10 backdrop-blur-sm transition-all duration-500 hover:border-primary/40 group flex flex-col justify-between";
@@ -111,14 +115,14 @@ const Feed = () => {
 
                 return (
                   <motion.article 
-                    key={post.id}
+                    key={post._id}
                     initial={{ opacity: 0, scale: 0.98, y: 20 }}
                     whileInView={{ opacity: 1, scale: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6, delay: (index % PAGE_SIZE) * 0.05 }}
                     className={containerClass}
                   >
-                    <Link to={`/post/${post.id}`} className="block h-full flex flex-col">
+                    <Link to={`/blog/${post.slug || post._id}`} className="block h-full flex flex-col">
                       <div className="relative h-48 w-full mb-6 overflow-hidden rounded-lg border border-border/50 group-hover:border-primary/30 transition-all">
                         <img 
                           src={post.thumbnail_url || getFallbackImage(index)} 
@@ -137,7 +141,7 @@ const Feed = () => {
                           )}
                           {(post.category) && <div className="h-px w-4 bg-border" />}
                           <span className="font-mono text-[10px] text-muted-foreground/60 uppercase tracking-widest">
-                            {new Date(post.created_at).toLocaleDateString("en-US", {
+                            {new Date(post.createdAt).toLocaleDateString("en-US", {
                               month: "short",
                               day: "numeric",
                               year: "numeric"
