@@ -1,14 +1,14 @@
-const express = require('express');
-const cors = require('cors');
-const morgan = require('morgan');
-const config = require('./config/env');
-const errorHandler = require('./middleware/errorHandler');
-const { apiLimiter } = require('./middleware/rateLimiter');
+import express, { json, urlencoded } from 'express';
+import cors from 'cors';
+import morgan from 'morgan';
+import { nodeEnv, port } from './config/env';
+import errorHandler from './middleware/errorHandler';
+import { apiLimiter } from './middleware/rateLimiter';
 
 // Route imports
-const authRoutes = require('./routes/authRoutes');
-const postRoutes = require('./routes/postRoutes');
-const aiRoutes = require('./routes/aiRoutes');
+import authRoutes from './routes/authRoutes';
+import postRoutes from './routes/postRoutes';
+import aiRoutes from './routes/aiRoutes';
 
 // Initialize Express
 const app = express();
@@ -21,7 +21,7 @@ app.set('trust proxy', 1);
 console.log('MONGO_URI =', process.env.MONGO_URI);
 
 // ensure DB connection happens on startup
-const connectDB = require('./config/db');
+import connectDB from './config/db';
 connectDB();
 // ---------------------
 // Global Middleware
@@ -36,11 +36,11 @@ app.use(
 );
 
 // Body parsers
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+app.use(json({ limit: '10mb' }));
+app.use(urlencoded({ extended: true }));
 
 // Request logging
-if (config.nodeEnv === 'development') {
+if (nodeEnv === 'development') {
   app.use(morgan('dev'));
 }
 
@@ -59,7 +59,7 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({
     success: true,
     message: 'Midnight Typewriter API is running',
-    environment: config.nodeEnv,
+    environment: nodeEnv,
     timestamp: new Date().toISOString(),
   });
 });
@@ -78,13 +78,13 @@ app.use(errorHandler);
 // ---------------------
 // Start Server
 // ---------------------
-const PORT = config.port;
+const PORT = port;
 
 app.listen(PORT, () => {
   console.log(`
   ╔══════════════════════════════════════════╗
   ║     🖋  Midnight Typewriter API          ║
-  ║     Mode: ${config.nodeEnv.padEnd(28)}   ║
+  ║     Mode: ${nodeEnv.padEnd(28)}   ║
   ║     Port: ${String(PORT).padEnd(28)}     ║
   ╚══════════════════════════════════════════╝
   `);
