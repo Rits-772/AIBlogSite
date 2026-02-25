@@ -16,14 +16,15 @@ const apiLimiter = rateLimit({
 });
 
 /**
- * Strict rate limiter for AI generation endpoint
+ * AI endpoint rate limiter (tighter limits)
+ * Uses config.rateLimit from server/config/env.js
  */
 const aiLimiter = rateLimit({
-  windowMs: config.rateLimit.windowMs,
-  max: config.rateLimit.max,
+  windowMs: config.rateLimit.windowMs || 60 * 1000, // default fallback
+  max: config.rateLimit.max || 5, // default fallback: 5 requests per window
   message: {
     success: false,
-    message: 'AI generation rate limit reached. Please wait before trying again.',
+    message: 'Too many AI requests, please try again later.',
   },
   standardHeaders: true,
   legacyHeaders: false,

@@ -12,7 +12,17 @@ const aiRoutes = require('./routes/aiRoutes');
 
 // Initialize Express
 const app = express();
+const API = import.meta.env.VITE_API_URL;
 
+// trust proxy (required when running behind Render / other proxies)
+app.set('trust proxy', 1);
+
+// --- debug: log which MONGO_URI the process sees (temporary — remove in prod)
+console.log('MONGO_URI =', process.env.MONGO_URI);
+
+// ensure DB connection happens on startup
+const connectDB = require('./config/db');
+connectDB();
 // ---------------------
 // Global Middleware
 // ---------------------
@@ -20,7 +30,7 @@ const app = express();
 // CORS — allow frontend origin
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: process.env.CLIENT_URL || `${API}`,
     credentials: true,
   })
 );
@@ -74,8 +84,8 @@ app.listen(PORT, () => {
   console.log(`
   ╔══════════════════════════════════════════╗
   ║     🖋  Midnight Typewriter API          ║
-  ║     Mode: ${config.nodeEnv.padEnd(28)}║
-  ║     Port: ${String(PORT).padEnd(28)}║
+  ║     Mode: ${config.nodeEnv.padEnd(28)}   ║
+  ║     Port: ${String(PORT).padEnd(28)}     ║
   ╚══════════════════════════════════════════╝
   `);
 });
