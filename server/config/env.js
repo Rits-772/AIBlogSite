@@ -10,7 +10,6 @@ dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 
 export const port = process.env.PORT || 5000;
 export const nodeEnv = process.env.NODE_ENV || 'development';
-export const mongoUri = process.env.MONGO_URI;
 export const jwtSecret = process.env.JWT_SECRET;
 export const jwtExpire = process.env.JWT_EXPIRE || '7d';
 
@@ -27,7 +26,6 @@ export const rateLimit = {
 export default {
   port,
   nodeEnv,
-  mongoUri,
   jwtSecret,
   jwtExpire,
   ai,

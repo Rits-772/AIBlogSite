@@ -1,9 +1,7 @@
-import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
-import config from '../config/env.js';
+import { supabase } from '../config/supabase.js';
 
 /**
- * Protect routes — require valid JWT
+ * Protect routes — require valid Supabase session
  */
 export const protect = async (req, res, next) => {
   let token;
@@ -15,10 +13,6 @@ export const protect = async (req, res, next) => {
   ) {
     token = req.headers.authorization.split(' ')[1];
   }
-  // Fallback: check cookies
-  else if (req.cookies && req.cookies.token) {
-    token = req.cookies.token;
-  }
 
   if (!token) {
     return res.status(401).json({
@@ -28,21 +22,30 @@ export const protect = async (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, config.jwtSecret);
-    req.user = await User.findById(decoded.id);
+    // Verify token with Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(token);
 
-    if (!req.user) {
+    if (error || !user) {
       return res.status(401).json({
         success: false,
-        message: 'Not authorized — user no longer exists',
+        message: 'Not authorized — invalid or expired token',
       });
     }
+
+    // Attach user to request
+    // Note: We might want to fetch more profile info here if needed
+    req.user = {
+      id: user.id,
+      email: user.email,
+      role: user.app_metadata?.role || 'user',
+      ...user.user_metadata
+    };
 
     next();
   } catch (error) {
     return res.status(401).json({
       success: false,
-      message: 'Not authorized — invalid token',
+      message: 'Not authorized — server error during authentication',
     });
   }
 };

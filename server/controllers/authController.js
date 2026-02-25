@@ -1,16 +1,5 @@
-import jwt from 'jsonwebtoken';
 import { validationResult } from 'express-validator';
-import User from '../models/User.js';
-import config from '../config/env.js';
-
-/**
- * Generate JWT token
- */
-const generateToken = (id) => {
-  return jwt.sign({ id }, config.jwtSecret, {
-    expiresIn: config.jwtExpire,
-  });
-};
+import { supabase } from '../config/supabase.js';
 
 /**
  * @desc    Register a new user
@@ -30,27 +19,33 @@ export const register = async (req, res, next) => {
 
     const { name, email, password } = req.body;
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
+    // Register with Supabase
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name,
+        },
+      },
+    });
+
+    if (authError) {
       return res.status(400).json({
         success: false,
-        message: 'A user with this email already exists',
+        message: authError.message,
       });
     }
 
-    const user = await User.create({ name, email, password });
-    const token = generateToken(user._id);
-
     res.status(201).json({
       success: true,
-      token,
+      token: authData.session?.access_token,
       user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        avatar: user.avatar,
+        id: authData.user.id,
+        name: authData.user.user_metadata.name,
+        email: authData.user.email,
+        role: authData.user.app_metadata.role || 'user',
+        avatar: authData.user.user_metadata.avatar || '',
       },
     });
   } catch (error) {
@@ -76,35 +71,28 @@ export const login = async (req, res, next) => {
 
     const { email, password } = req.body;
 
-    // Find user and include password field
-    const user = await User.findOne({ email }).select('+password');
-    if (!user) {
+    // Login with Supabase
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials',
       });
     }
-
-    // Check password
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials',
-      });
-    }
-
-    const token = generateToken(user._id);
 
     res.status(200).json({
       success: true,
-      token,
+      token: data.session.access_token,
       user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        avatar: user.avatar,
+        id: data.user.id,
+        name: data.user.user_metadata.name,
+        email: data.user.email,
+        role: data.user.app_metadata.role || 'user',
+        avatar: data.user.user_metadata.avatar || '',
       },
     });
   } catch (error) {
@@ -119,19 +107,10 @@ export const login = async (req, res, next) => {
  */
 export const getMe = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.id);
-
+    // req.user is already populated by protect middleware
     res.status(200).json({
       success: true,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        avatar: user.avatar,
-        aiUsageCount: user.aiUsageCount,
-        createdAt: user.createdAt,
-      },
+      user: req.user
     });
   } catch (error) {
     next(error);

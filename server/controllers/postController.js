@@ -1,5 +1,15 @@
 import { validationResult } from 'express-validator';
-import Post from '../models/Post.js';
+import { supabase } from '../config/supabase.js';
+
+// Helper to generate slug
+const generateSlug = (title) => {
+  return title
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '') // remove special characters
+    .trim()
+    .replace(/\s+/g, '-') // replace spaces with -
+    .replace(/-+/g, '-'); // replace multiple - with single -
+};
 
 /**
  * @desc    Get all published posts (public feed)
@@ -10,35 +20,37 @@ export const getPosts = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
-    const skip = (page - 1) * limit;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
 
-    const filter = { status: 'published' };
+    let query = supabase
+      .from('posts')
+      .select('*, author:profiles(name, avatar)', { count: 'exact' })
+      .eq('status', 'published')
+      .eq('isDeleted', false)
+      .order('createdAt', { ascending: false })
+      .range(from, to);
 
     // Optional tag filter
     if (req.query.tag) {
-      filter.tags = req.query.tag;
+      query = query.contains('tags', [req.query.tag]);
     }
 
     // Optional category filter
     if (req.query.category) {
-      filter.category = req.query.category;
+      query = query.eq('category', req.query.category);
     }
 
-    const [posts, total] = await Promise.all([
-      Post.find(filter)
-        .populate('author', 'name avatar')
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit),
-      Post.countDocuments(filter),
-    ]);
+    const { data: posts, count, error } = await query;
+
+    if (error) throw error;
 
     res.status(200).json({
       success: true,
       count: posts.length,
-      total,
+      total: count,
       page,
-      pages: Math.ceil(total / limit),
+      pages: Math.ceil(count / limit),
       data: posts,
     });
   } catch (error) {
@@ -47,33 +59,40 @@ export const getPosts = async (req, res, next) => {
 };
 
 /**
- * @desc    Get single post by ID
+ * @desc    Get single post by ID or Slug
  * @route   GET /api/posts/:id
  * @access  Public
  */
 export const getPost = async (req, res, next) => {
   try {
     const { id } = req.params;
-    let post;
+    
+    // Attempt lookup by ID first, then slug
+    let query = supabase
+      .from('posts')
+      .select('*, author:profiles(name, avatar)')
+      .eq('isDeleted', false);
 
-    // Check if ID is a valid MongoDB ObjectId
-    if (id.match(/^[0-9a-fA-F]{24}$/)) {
-      post = await Post.findById(id).populate('author', 'name avatar');
+    if (id.match(/^[0-9a-fA-F-]{36}$/)) { // UUID check for Supabase
+      query = query.or(`id.eq.${id},slug.eq.${id}`);
     } else {
-      // Otherwise, assume it's a slug
-      post = await Post.findOne({ slug: id }).populate('author', 'name avatar');
+      query = query.eq('slug', id);
     }
 
-    if (!post) {
+    const { data: post, error } = await query.single();
+
+    if (error || !post) {
       return res.status(404).json({
         success: false,
         message: 'Post not found',
       });
     }
 
-    // Increment views
-    post.views += 1;
-    await post.save();
+    // Increment views (RPC or manual update)
+    await supabase
+      .from('posts')
+      .update({ views: (post.views || 0) + 1 })
+      .eq('id', post.id);
 
     res.status(200).json({
       success: true,
@@ -101,21 +120,29 @@ export const createPost = async (req, res, next) => {
     }
 
     const { title, content, tags, category, status } = req.body;
+    const slug = generateSlug(title);
 
-    const post = await Post.create({
-      title,
-      content,
-      tags: tags || [],
-      category: category || 'uncategorized',
-      status: status || 'draft',
-      author: req.user.id,
-    });
+    const { data: post, error } = await supabase
+      .from('posts')
+      .insert([
+        {
+          title,
+          content,
+          slug,
+          tags: tags || [],
+          category: category || 'uncategorized',
+          status: status || 'draft',
+          author_id: req.user.id,
+        },
+      ])
+      .select('*, author:profiles(name, avatar)')
+      .single();
 
-    const populated = await post.populate('author', 'name avatar');
+    if (error) throw error;
 
     res.status(201).json({
       success: true,
-      data: populated,
+      data: post,
     });
   } catch (error) {
     next(error);
@@ -138,37 +165,55 @@ export const updatePost = async (req, res, next) => {
       });
     }
 
-    let post = await Post.findById(req.params.id);
+    const { id } = req.params;
+    const { title, content, tags, category, status } = req.body;
 
-    if (!post) {
+    // Check ownership
+    const { data: existingPost, error: fetchError } = await supabase
+      .from('posts')
+      .select('author_id')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !existingPost) {
       return res.status(404).json({
         success: false,
         message: 'Post not found',
       });
     }
 
-    // Ensure user owns the post
-    if (post.author.toString() !== req.user.id) {
+    if (existingPost.author_id !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to update this post',
       });
     }
 
-    const { title, content, tags, category, status } = req.body;
+    const updateData = {
+      title: title ?? undefined,
+      content: content ?? undefined,
+      tags: tags ?? undefined,
+      category: category ?? undefined,
+      status: status ?? undefined,
+      updatedAt: new Date().toISOString()
+    };
 
-    post.title = title ?? post.title;
-    post.content = content ?? post.content;
-    post.tags = tags ?? post.tags;
-    post.category = category ?? post.category;
-    post.status = status ?? post.status;
+    if (title) {
+      updateData.slug = generateSlug(title);
+    }
 
-    await post.save();
-    await post.populate('author', 'name avatar');
+    const { data: updatedPost, error: updateError } = await supabase
+      .from('posts')
+      .update(updateData)
+      .eq('id', id)
+      .select('*, author:profiles(name, avatar)')
+      .single();
+
+    if (updateError) throw updateError;
 
     res.status(200).json({
       success: true,
-      data: post,
+      data: updatedPost,
     });
   } catch (error) {
     next(error);
@@ -182,25 +227,35 @@ export const updatePost = async (req, res, next) => {
  */
 export const deletePost = async (req, res, next) => {
   try {
-    const post = await Post.findById(req.params.id);
+    const { id } = req.params;
 
-    if (!post) {
+    // Check ownership
+    const { data: existingPost, error: fetchError } = await supabase
+      .from('posts')
+      .select('author_id')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !existingPost) {
       return res.status(404).json({
         success: false,
         message: 'Post not found',
       });
     }
 
-    // Ensure user owns the post
-    if (post.author.toString() !== req.user.id) {
+    if (existingPost.author_id !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to delete this post',
       });
     }
 
-    post.isDeleted = true;
-    await post.save();
+    const { error: deleteError } = await supabase
+      .from('posts')
+      .update({ isDeleted: true })
+      .eq('id', id);
+
+    if (deleteError) throw deleteError;
 
     res.status(200).json({
       success: true,
@@ -220,33 +275,34 @@ export const getMyPosts = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
-    const skip = (page - 1) * limit;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
 
-    const filter = { author: req.user.id };
+    let query = supabase
+      .from('posts')
+      .select('*', { count: 'exact' })
+      .eq('author_id', req.user.id)
+      .eq('isDeleted', false)
+      .order('updatedAt', { ascending: false })
+      .range(from, to);
 
     if (req.query.status) {
-      filter.status = req.query.status;
+      query = query.eq('status', req.query.status);
     }
 
-    const [posts, total] = await Promise.all([
-      Post.find(filter)
-        .sort({ updatedAt: -1 })
-        .skip(skip)
-        .limit(limit),
-      Post.countDocuments(filter),
-    ]);
+    const { data: posts, count, error } = await query;
+
+    if (error) throw error;
 
     res.status(200).json({
       success: true,
       count: posts.length,
-      total,
+      total: count,
       page,
-      pages: Math.ceil(total / limit),
+      pages: Math.ceil(count / limit),
       data: posts,
     });
   } catch (error) {
     next(error);
   }
 };
-
-// module.exports removed, using named exports

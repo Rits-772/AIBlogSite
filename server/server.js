@@ -12,17 +12,10 @@ import aiRoutes from './routes/aiRoutes.js';
 
 // Initialize Express
 const app = express();
-const API = import.meta.env.VITE_API_URL;
+const API = process.env.VITE_API_URL;
 
 // trust proxy (required when running behind Render / other proxies)
 app.set('trust proxy', 1);
-
-// --- debug: log which MONGO_URI the process sees (temporary — remove in prod)
-console.log('MONGO_URI =', process.env.MONGO_URI);
-
-// ensure DB connection happens on startup
-import connectDB from './config/db.js';
-connectDB();
 // ---------------------
 // Global Middleware
 // ---------------------
