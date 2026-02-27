@@ -45,7 +45,6 @@ export const register = async (req, res, next) => {
         name: authData.user.user_metadata.name,
         email: authData.user.email,
         role: authData.user.app_metadata.role || 'user',
-        avatar: authData.user.user_metadata.avatar || '',
       },
     });
   } catch (error) {
