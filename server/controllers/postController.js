@@ -25,7 +25,7 @@ export const getPosts = async (req, res, next) => {
 
     let query = supabase
       .from('posts')
-      .select('*, author:profiles(name, avatar)', { count: 'exact' })
+      .select('*, author:profiles(full_name, avatar)', { count: 'exact' })
       .eq('status', 'published')
       .eq('isDeleted', false)
       .order('createdAt', { ascending: false })
@@ -70,7 +70,7 @@ export const getPost = async (req, res, next) => {
     // Attempt lookup by ID first, then slug
     let query = supabase
       .from('posts')
-      .select('*, author:profiles(name, avatar)')
+      .select('*, author:profiles(full_name, avatar)')
       .eq('isDeleted', false);
 
     if (id.match(/^[0-9a-fA-F-]{36}$/)) { // UUID check for Supabase
@@ -135,7 +135,7 @@ export const createPost = async (req, res, next) => {
           author_id: req.user.id,
         },
       ])
-      .select('*, author:profiles(name, avatar)')
+      .select('*, author:profiles(full_name, avatar)')
       .single();
 
     if (error) throw error;
@@ -206,7 +206,7 @@ export const updatePost = async (req, res, next) => {
       .from('posts')
       .update(updateData)
       .eq('id', id)
-      .select('*, author:profiles(name, avatar)')
+      .select('*, author:profiles(full_name, avatar)')
       .single();
 
     if (updateError) throw updateError;
