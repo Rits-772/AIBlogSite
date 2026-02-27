@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { posts as postsApi } from "../../utils/api";
 import { getFallbackImage } from "../../utils/assets";
 
